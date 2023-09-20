@@ -29,10 +29,6 @@
 /* Installation directory for documentation */
 /* #undef LLVM_DOCSDIR */
 
-/* Define if LLVM is built with asserts and checks that change the layout of
-   client-visible data structures.  */
-#define LLVM_ENABLE_ABI_BREAKING_CHECKS 0
-
 /* Define if threads enabled */
 #define LLVM_ENABLE_THREADS 1
 

@@ -26,7 +26,7 @@ void llvm_assert(_In_z_ const char *_Message,
 
 #include <assert.h>
 
-void llvm_assert(const char* message, const char*, unsigned) {
+void llvm_assert(const char* message, const char*, unsigned,  const char*)  {
   assert(false && message);
 }
 
