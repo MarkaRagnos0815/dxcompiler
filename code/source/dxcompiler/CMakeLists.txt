@@ -59,6 +59,8 @@ if (MSVC)
 	set(LLVMDxilDia LLVMDxilDia)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE "DXC_API_IMPORT=__declspec(dllexport)")
 	target_link_options(${PROJECT_NAME} PRIVATE /LIBPATH:"$(VsInstallDir)/DIA SDK/lib/amd64")
+else()
+	target_compile_definitions(${PROJECT_NAME} PRIVATE "__EMULATE_UUID=1")
 endif()
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${TARGET_TMP_DIR}/lib/${PROJECT_OUTPUT_SUB_PATH})
