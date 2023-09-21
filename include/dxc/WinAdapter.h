@@ -718,6 +718,8 @@ public:
   bool operator<(T *pT) const throw() { return p < pT; }
   bool operator!=(T *pT) const { return !operator==(pT); }
   bool operator==(T *pT) const throw() { return p == pT; }
+  bool operator!=(const CComPtrBase& pT) const { return !operator==(pT.p); }
+  bool operator==(const CComPtrBase& pT) const throw() { return p == pT.p; }
 
   // Release the interface and set to nullptr
   void Release() throw() {
