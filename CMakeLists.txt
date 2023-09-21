@@ -5,4 +5,4 @@ project(dxcompiler_root VERSION 1.0 DESCRIPTION "DXC Compiler Project")
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/build.cmake)
 
-add_subdirectory(code)
+add_subdirectory(source)

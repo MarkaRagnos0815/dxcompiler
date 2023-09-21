@@ -39,27 +39,6 @@ function(check_cxx_compiler_flag_or_fail FLAG)
 	endif()
 endfunction()
 
-function(set_target_library_path TARGET PATH)
-    set(ABS_PATH ${PATH})
-    cmake_path(ABSOLUTE_PATH ABS_PATH NORMALIZE)
-
-    set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ABS_PATH})
-endfunction()
-
-function(set_target_archive_path TARGET PATH)
-    set(ABS_PATH ${PATH})
-    cmake_path(ABSOLUTE_PATH ABS_PATH NORMALIZE)
-
-    set_target_properties(${TARGET} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ABS_PATH})
-endfunction()
-
-function(set_target_runtime_path TARGET PATH)
-    set(ABS_PATH ${PATH})
-    cmake_path(ABSOLUTE_PATH ABS_PATH NORMALIZE)
-
-    set_target_properties(${TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ABS_PATH})
-endfunction()
-
 function(set_target_cxx_standard TARGET STANDARD)
     set_target_properties(${TARGET} PROPERTIES CXX_STANDARD ${STANDARD})
     set_target_properties(${TARGET} PROPERTIES CXX_STANDARD_REQUIRED on)
