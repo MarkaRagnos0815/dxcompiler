@@ -111,7 +111,7 @@ target_link_libraries(${PROJECT_NAME}
 
 include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/default_target_settings.cmake)
 
-set(DXCOMPILER_HEADERS ../../include/dxc/dxcapi.h ../../include/dxc/dxcerrors.h ../../include/dxc/dxcisense.h ../../include/dxc/WinAdapter.h)
+set(DXCOMPILER_HEADERS ../../include/dxc/dxcapi.h ../../include/dxc/config.h  ../../include/dxc/dxcerrors.h ../../include/dxc/dxcisense.h ../../include/dxc/WinAdapter.h ../../include/dxc/Support/WinIncludes.h)
 
 install(
     TARGETS dxcompiler
