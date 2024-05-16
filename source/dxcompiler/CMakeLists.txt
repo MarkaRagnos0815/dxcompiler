@@ -47,7 +47,12 @@ else()
 	target_compile_definitions(${PROJECT_NAME} PRIVATE "__EMULATE_UUID=1")
 endif()
 
+set(EXPORT_VISIBLE true)
+include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/default_target_settings.cmake)
+
 target_link_directories(${PROJECT_NAME} PRIVATE ${TARGET_TMP_DIR}/lib/${PROJECT_OUTPUT_SUB_PATH})
+target_link_options(${PROJECT_NAME} PRIVATE "-s")
+
 
 set(DXC_LIBRARIES
 	clangIndex
@@ -109,7 +114,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 
-include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/default_target_settings.cmake)
+
 
 set(DXCOMPILER_HEADERS ../../include/dxc/dxcapi.h ../../include/dxc/config.h  ../../include/dxc/dxcerrors.h ../../include/dxc/dxcisense.h ../../include/dxc/WinAdapter.h ../../include/dxc/Support/WinIncludes.h)
 
