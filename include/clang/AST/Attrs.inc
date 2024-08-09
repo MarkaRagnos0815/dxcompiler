@@ -1051,14 +1051,14 @@ public:
       std::memcpy(this->message, S.data(), messageLength);
   }
 
-static llvm::StringRef getPrettyPlatformName(llvm::StringRef Platform) {
-    return llvm::StringSwitch<llvm::StringRef>(Platform)
-             .Case("android", "Android")
-             .Case("ios", "iOS")
-             .Case("macosx", "OS X")
-             .Case("ios_app_extension", "iOS (App Extension)")
-             .Case("macosx_app_extension", "OS X (App Extension)")
-             .Default(llvm::StringRef());
+static llvm::StringRef getPrettyPlatformName(llvm::StringRef Platform) {
+    return llvm::StringSwitch<llvm::StringRef>(Platform)
+             .Case("android", "Android")
+             .Case("ios", "iOS")
+             .Case("macosx", "OS X")
+             .Case("ios_app_extension", "iOS (App Extension)")
+             .Case("macosx_app_extension", "OS X (App Extension)")
+             .Default(llvm::StringRef());
 } 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Availability; }
@@ -1656,9 +1656,9 @@ public:
       std::memcpy(this->name, S.data(), nameLength);
   }
 
-
-    bool isMutex() const { return getName().equals_lower("mutex"); }
-    bool isRole() const { return getName().equals_lower("role"); }
+
+    bool isMutex() const { return getName().equals_lower("mutex"); }
+    bool isRole() const { return getName().equals_lower("role"); }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Capability; }
@@ -2346,17 +2346,17 @@ public:
   void printPretty(raw_ostream &OS,
                    const PrintingPolicy &Policy) const;
   const char *getSpelling() const;
-
-private:
-    llvm::APInt FlagBits;
-public:
-    llvm::APInt &getFlagBits() {
-      return FlagBits;
-    }
-
-    const llvm::APInt &getFlagBits() const {
-      return FlagBits;
-    }
+
+private:
+    llvm::APInt FlagBits;
+public:
+    llvm::APInt &getFlagBits() {
+      return FlagBits;
+    }
+
+    const llvm::APInt &getFlagBits() const {
+      return FlagBits;
+    }
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::FlagEnum; }
@@ -2555,6 +2555,31 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::GuardedVar; }
+};
+
+class HLSLAllowSparseNodesAttr : public InheritableParamAttr {
+
+public:
+  static HLSLAllowSparseNodesAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLAllowSparseNodesAttr *A = new (Ctx) HLSLAllowSparseNodesAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLAllowSparseNodesAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableParamAttr(attr::HLSLAllowSparseNodes, R, SI, 0, 0)
+  {
+  }
+
+  HLSLAllowSparseNodesAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLAllowSparseNodes; }
 };
 
 class HLSLAllowUAVConditionAttr : public Attr {
@@ -3369,6 +3394,74 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLLoop; }
 };
 
+class HLSLMaxRecordsAttr : public InheritableAttr {
+int maxCount;
+
+
+public:
+  static HLSLMaxRecordsAttr *CreateImplicit(ASTContext &Ctx, int MaxCount, SourceRange Loc = SourceRange()) {
+    HLSLMaxRecordsAttr *A = new (Ctx) HLSLMaxRecordsAttr(Loc, Ctx, MaxCount, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLMaxRecordsAttr(SourceRange R, ASTContext &Ctx
+              , int MaxCount
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLMaxRecords, R, SI, 0, 0)
+              , maxCount(MaxCount)
+  {
+
+  }
+
+  HLSLMaxRecordsAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  int getMaxCount() const {
+    return maxCount;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLMaxRecords; }
+};
+
+class HLSLMaxRecordsSharedWithAttr : public InheritableParamAttr {
+IdentifierInfo * name;
+
+
+public:
+  static HLSLMaxRecordsSharedWithAttr *CreateImplicit(ASTContext &Ctx, IdentifierInfo * Name, SourceRange Loc = SourceRange()) {
+    HLSLMaxRecordsSharedWithAttr *A = new (Ctx) HLSLMaxRecordsSharedWithAttr(Loc, Ctx, Name, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLMaxRecordsSharedWithAttr(SourceRange R, ASTContext &Ctx
+              , IdentifierInfo * Name
+              , unsigned SI
+             )
+    : InheritableParamAttr(attr::HLSLMaxRecordsSharedWith, R, SI, 0, 0)
+              , name(Name)
+  {
+
+  }
+
+  HLSLMaxRecordsSharedWithAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  IdentifierInfo * getName() const {
+    return name;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLMaxRecordsSharedWith; }
+};
+
 class HLSLMaxTessFactorAttr : public InheritableAttr {
 int factor;
 
@@ -3510,6 +3603,607 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNoPerspective; }
+};
+
+class HLSLNodeArraySizeAttr : public InheritableAttr {
+int count;
+
+
+public:
+  static HLSLNodeArraySizeAttr *CreateImplicit(ASTContext &Ctx, int Count, SourceRange Loc = SourceRange()) {
+    HLSLNodeArraySizeAttr *A = new (Ctx) HLSLNodeArraySizeAttr(Loc, Ctx, Count, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeArraySizeAttr(SourceRange R, ASTContext &Ctx
+              , int Count
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeArraySize, R, SI, 0, 0)
+              , count(Count)
+  {
+
+  }
+
+  HLSLNodeArraySizeAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  int getCount() const {
+    return count;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeArraySize; }
+};
+
+class HLSLNodeDispatchGridAttr : public InheritableAttr {
+unsigned x;
+
+unsigned y;
+
+unsigned z;
+
+
+public:
+  static HLSLNodeDispatchGridAttr *CreateImplicit(ASTContext &Ctx, unsigned X, unsigned Y, unsigned Z, SourceRange Loc = SourceRange()) {
+    HLSLNodeDispatchGridAttr *A = new (Ctx) HLSLNodeDispatchGridAttr(Loc, Ctx, X, Y, Z, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeDispatchGridAttr(SourceRange R, ASTContext &Ctx
+              , unsigned X
+              , unsigned Y
+              , unsigned Z
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeDispatchGrid, R, SI, 0, 0)
+              , x(X)
+              , y(Y)
+              , z(Z)
+  {
+
+
+
+  }
+
+  HLSLNodeDispatchGridAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getX() const {
+    return x;
+  }
+
+  unsigned getY() const {
+    return y;
+  }
+
+  unsigned getZ() const {
+    return z;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeDispatchGrid; }
+};
+
+class HLSLNodeIdAttr : public InheritableAttr {
+unsigned nameLength;
+char *name;
+
+int arrayIndex;
+
+
+public:
+  static HLSLNodeIdAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef Name, int ArrayIndex, SourceRange Loc = SourceRange()) {
+    HLSLNodeIdAttr *A = new (Ctx) HLSLNodeIdAttr(Loc, Ctx, Name, ArrayIndex, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeIdAttr(SourceRange R, ASTContext &Ctx
+              , llvm::StringRef Name
+              , int ArrayIndex
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeId, R, SI, 0, 0)
+              , nameLength(Name.size()),name(new (Ctx, 1) char[nameLength])
+              , arrayIndex(ArrayIndex)
+  {
+      if (!Name.empty())
+        std::memcpy(name, Name.data(), nameLength);
+
+  }
+
+  HLSLNodeIdAttr(SourceRange R, ASTContext &Ctx
+              , llvm::StringRef Name
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeId, R, SI, 0, 0)
+              , nameLength(0),name(0)
+              , arrayIndex()
+  {
+      if (!Name.empty())
+        std::memcpy(name, Name.data(), nameLength);
+  }
+
+  HLSLNodeIdAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  llvm::StringRef getName() const {
+    return llvm::StringRef(name, nameLength);
+  }
+  unsigned getNameLength() const {
+    return nameLength;
+  }
+  void setName(ASTContext &C, llvm::StringRef S) {
+    nameLength = S.size();
+    this->name = new (C, 1) char [nameLength];
+    if (!S.empty())
+      std::memcpy(this->name, S.data(), nameLength);
+  }
+
+  int getArrayIndex() const {
+    return arrayIndex;
+  }
+
+  static const int DefaultArrayIndex = 0;
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeId; }
+};
+
+class HLSLNodeIsProgramEntryAttr : public InheritableAttr {
+
+public:
+  static HLSLNodeIsProgramEntryAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLNodeIsProgramEntryAttr *A = new (Ctx) HLSLNodeIsProgramEntryAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeIsProgramEntryAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeIsProgramEntry, R, SI, 0, 0)
+  {
+  }
+
+  HLSLNodeIsProgramEntryAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeIsProgramEntry; }
+};
+
+class HLSLNodeLaunchAttr : public InheritableAttr {
+unsigned launchTypeLength;
+char *launchType;
+
+
+public:
+  static HLSLNodeLaunchAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef LaunchType, SourceRange Loc = SourceRange()) {
+    HLSLNodeLaunchAttr *A = new (Ctx) HLSLNodeLaunchAttr(Loc, Ctx, LaunchType, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeLaunchAttr(SourceRange R, ASTContext &Ctx
+              , llvm::StringRef LaunchType
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeLaunch, R, SI, 0, 0)
+              , launchTypeLength(LaunchType.size()),launchType(new (Ctx, 1) char[launchTypeLength])
+  {
+      if (!LaunchType.empty())
+        std::memcpy(launchType, LaunchType.data(), launchTypeLength);
+  }
+
+  HLSLNodeLaunchAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  llvm::StringRef getLaunchType() const {
+    return llvm::StringRef(launchType, launchTypeLength);
+  }
+  unsigned getLaunchTypeLength() const {
+    return launchTypeLength;
+  }
+  void setLaunchType(ASTContext &C, llvm::StringRef S) {
+    launchTypeLength = S.size();
+    this->launchType = new (C, 1) char [launchTypeLength];
+    if (!S.empty())
+      std::memcpy(this->launchType, S.data(), launchTypeLength);
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeLaunch; }
+};
+
+class HLSLNodeLocalRootArgumentsTableIndexAttr : public InheritableAttr {
+unsigned index;
+
+
+public:
+  static HLSLNodeLocalRootArgumentsTableIndexAttr *CreateImplicit(ASTContext &Ctx, unsigned Index, SourceRange Loc = SourceRange()) {
+    HLSLNodeLocalRootArgumentsTableIndexAttr *A = new (Ctx) HLSLNodeLocalRootArgumentsTableIndexAttr(Loc, Ctx, Index, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeLocalRootArgumentsTableIndexAttr(SourceRange R, ASTContext &Ctx
+              , unsigned Index
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeLocalRootArgumentsTableIndex, R, SI, 0, 0)
+              , index(Index)
+  {
+
+  }
+
+  HLSLNodeLocalRootArgumentsTableIndexAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getIndex() const {
+    return index;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeLocalRootArgumentsTableIndex; }
+};
+
+class HLSLNodeMaxDispatchGridAttr : public InheritableAttr {
+unsigned x;
+
+unsigned y;
+
+unsigned z;
+
+
+public:
+  static HLSLNodeMaxDispatchGridAttr *CreateImplicit(ASTContext &Ctx, unsigned X, unsigned Y, unsigned Z, SourceRange Loc = SourceRange()) {
+    HLSLNodeMaxDispatchGridAttr *A = new (Ctx) HLSLNodeMaxDispatchGridAttr(Loc, Ctx, X, Y, Z, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeMaxDispatchGridAttr(SourceRange R, ASTContext &Ctx
+              , unsigned X
+              , unsigned Y
+              , unsigned Z
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeMaxDispatchGrid, R, SI, 0, 0)
+              , x(X)
+              , y(Y)
+              , z(Z)
+  {
+
+
+
+  }
+
+  HLSLNodeMaxDispatchGridAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getX() const {
+    return x;
+  }
+
+  unsigned getY() const {
+    return y;
+  }
+
+  unsigned getZ() const {
+    return z;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeMaxDispatchGrid; }
+};
+
+class HLSLNodeMaxRecursionDepthAttr : public InheritableAttr {
+unsigned count;
+
+
+public:
+  static HLSLNodeMaxRecursionDepthAttr *CreateImplicit(ASTContext &Ctx, unsigned Count, SourceRange Loc = SourceRange()) {
+    HLSLNodeMaxRecursionDepthAttr *A = new (Ctx) HLSLNodeMaxRecursionDepthAttr(Loc, Ctx, Count, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeMaxRecursionDepthAttr(SourceRange R, ASTContext &Ctx
+              , unsigned Count
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeMaxRecursionDepth, R, SI, 0, 0)
+              , count(Count)
+  {
+
+  }
+
+  HLSLNodeMaxRecursionDepthAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getCount() const {
+    return count;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeMaxRecursionDepth; }
+};
+
+class HLSLNodeObjectAttr : public InheritableAttr {
+public:
+  enum RecordType {
+    DispatchNodeInputRecord,
+    RWDispatchNodeInputRecord,
+    GroupNodeInputRecords,
+    RWGroupNodeInputRecords,
+    ThreadNodeInputRecord,
+    RWThreadNodeInputRecord,
+    EmptyNodeInput,
+    NodeOutput,
+    EmptyNodeOutput,
+    NodeOutputArray,
+    EmptyNodeOutputArray,
+    GroupNodeOutputRecords,
+    ThreadNodeOutputRecords
+  };
+private:
+  RecordType type;
+
+
+public:
+  static HLSLNodeObjectAttr *CreateImplicit(ASTContext &Ctx, RecordType Type, SourceRange Loc = SourceRange()) {
+    HLSLNodeObjectAttr *A = new (Ctx) HLSLNodeObjectAttr(Loc, Ctx, Type, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeObjectAttr(SourceRange R, ASTContext &Ctx
+              , RecordType Type
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeObject, R, SI, 0, 0)
+              , type(Type)
+  {
+
+  }
+
+  HLSLNodeObjectAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  RecordType getType() const {
+    return type;
+  }
+
+  static bool ConvertStrToRecordType(StringRef Val, RecordType &Out) {
+    Optional<RecordType> R = llvm::StringSwitch<Optional<RecordType>>(Val)
+      .Case("DispatchNodeInputRecord", HLSLNodeObjectAttr::DispatchNodeInputRecord)
+      .Case("RWDispatchNodeInputRecord", HLSLNodeObjectAttr::RWDispatchNodeInputRecord)
+      .Case("GroupNodeInputRecords", HLSLNodeObjectAttr::GroupNodeInputRecords)
+      .Case("RWGroupNodeInputRecords", HLSLNodeObjectAttr::RWGroupNodeInputRecords)
+      .Case("ThreadNodeInputRecord", HLSLNodeObjectAttr::ThreadNodeInputRecord)
+      .Case("RWThreadNodeInputRecord", HLSLNodeObjectAttr::RWThreadNodeInputRecord)
+      .Case("EmptyNodeInput", HLSLNodeObjectAttr::EmptyNodeInput)
+      .Case("NodeOutput", HLSLNodeObjectAttr::NodeOutput)
+      .Case("EmptyNodeOutput", HLSLNodeObjectAttr::EmptyNodeOutput)
+      .Case("NodeOutputArray", HLSLNodeObjectAttr::NodeOutputArray)
+      .Case("EmptyNodeOutputArray", HLSLNodeObjectAttr::EmptyNodeOutputArray)
+      .Case("GroupNodeOutputRecords", HLSLNodeObjectAttr::GroupNodeOutputRecords)
+      .Case("ThreadNodeOutputRecords", HLSLNodeObjectAttr::ThreadNodeOutputRecords)
+      .Default(Optional<RecordType>());
+    if (R) {
+      Out = *R;
+      return true;
+    }
+    return false;
+  }
+
+  static const char *ConvertRecordTypeToStr(RecordType Val) {
+    switch(Val) {
+    case HLSLNodeObjectAttr::DispatchNodeInputRecord: return "DispatchNodeInputRecord";
+    case HLSLNodeObjectAttr::RWDispatchNodeInputRecord: return "RWDispatchNodeInputRecord";
+    case HLSLNodeObjectAttr::GroupNodeInputRecords: return "GroupNodeInputRecords";
+    case HLSLNodeObjectAttr::RWGroupNodeInputRecords: return "RWGroupNodeInputRecords";
+    case HLSLNodeObjectAttr::ThreadNodeInputRecord: return "ThreadNodeInputRecord";
+    case HLSLNodeObjectAttr::RWThreadNodeInputRecord: return "RWThreadNodeInputRecord";
+    case HLSLNodeObjectAttr::EmptyNodeInput: return "EmptyNodeInput";
+    case HLSLNodeObjectAttr::NodeOutput: return "NodeOutput";
+    case HLSLNodeObjectAttr::EmptyNodeOutput: return "EmptyNodeOutput";
+    case HLSLNodeObjectAttr::NodeOutputArray: return "NodeOutputArray";
+    case HLSLNodeObjectAttr::EmptyNodeOutputArray: return "EmptyNodeOutputArray";
+    case HLSLNodeObjectAttr::GroupNodeOutputRecords: return "GroupNodeOutputRecords";
+    case HLSLNodeObjectAttr::ThreadNodeOutputRecords: return "ThreadNodeOutputRecords";
+    }
+    llvm_unreachable("No enumerator with that value");
+  }
+hlsl::DXIL::NodeIOKind getNodeIOType() const {
+      switch (type) {
+      case DispatchNodeInputRecord:
+        return hlsl::DXIL::NodeIOKind::DispatchNodeInputRecord;
+      case RWDispatchNodeInputRecord:
+        return hlsl::DXIL::NodeIOKind::RWDispatchNodeInputRecord;
+      case GroupNodeInputRecords:
+        return hlsl::DXIL::NodeIOKind::GroupNodeInputRecords;
+      case RWGroupNodeInputRecords:
+        return hlsl::DXIL::NodeIOKind::RWGroupNodeInputRecords;
+      case ThreadNodeInputRecord:
+        return hlsl::DXIL::NodeIOKind::ThreadNodeInputRecord;
+      case RWThreadNodeInputRecord:
+        return hlsl::DXIL::NodeIOKind::RWThreadNodeInputRecord;
+      case EmptyNodeInput:
+        return hlsl::DXIL::NodeIOKind::EmptyInput;
+      case NodeOutput:
+        return hlsl::DXIL::NodeIOKind::NodeOutput;
+      case EmptyNodeOutput:
+        return hlsl::DXIL::NodeIOKind::EmptyOutput;
+      case NodeOutputArray:
+        return hlsl::DXIL::NodeIOKind::NodeOutputArray;
+      case EmptyNodeOutputArray:
+        return hlsl::DXIL::NodeIOKind::EmptyOutputArray;
+      case GroupNodeOutputRecords:
+        return hlsl::DXIL::NodeIOKind::GroupNodeOutputRecords;
+      case ThreadNodeOutputRecords:
+        return hlsl::DXIL::NodeIOKind::ThreadNodeOutputRecords;
+      }
+      llvm_unreachable("all cases exhausted");
+      return hlsl::DXIL::NodeIOKind::Invalid;
+    }
+
+    static RecordType toAttrType(hlsl::DXIL::NodeIOKind Type) {
+      switch (Type) {
+      case hlsl::DXIL::NodeIOKind::DispatchNodeInputRecord:
+        return DispatchNodeInputRecord;
+      case hlsl::DXIL::NodeIOKind::RWDispatchNodeInputRecord:
+        return RWDispatchNodeInputRecord;
+      case hlsl::DXIL::NodeIOKind::GroupNodeInputRecords:
+        return GroupNodeInputRecords;
+      case hlsl::DXIL::NodeIOKind::RWGroupNodeInputRecords:
+        return RWGroupNodeInputRecords;
+      case hlsl::DXIL::NodeIOKind::ThreadNodeInputRecord:
+        return ThreadNodeInputRecord;
+      case hlsl::DXIL::NodeIOKind::RWThreadNodeInputRecord:
+        return RWThreadNodeInputRecord;
+      case hlsl::DXIL::NodeIOKind::EmptyInput:
+        return EmptyNodeInput;
+      case hlsl::DXIL::NodeIOKind::NodeOutput:
+        return NodeOutput;
+      case hlsl::DXIL::NodeIOKind::EmptyOutput:
+        return EmptyNodeOutput;
+      case hlsl::DXIL::NodeIOKind::NodeOutputArray:
+        return NodeOutputArray;
+      case hlsl::DXIL::NodeIOKind::EmptyOutputArray:
+        return EmptyNodeOutputArray;
+      case hlsl::DXIL::NodeIOKind::GroupNodeOutputRecords:
+        return GroupNodeOutputRecords;
+      case hlsl::DXIL::NodeIOKind::ThreadNodeOutputRecords:
+        return ThreadNodeOutputRecords;
+      }
+      llvm_unreachable("all cases exhausted");
+    }
+
+    static HLSLNodeObjectAttr *CreateImplicit(ASTContext &Ctx,
+                                              hlsl::DXIL::NodeIOKind Type,
+                                              SourceRange Loc = SourceRange()) {
+      return CreateImplicit(Ctx, toAttrType(Type), Loc);
+    }
+
+    static const char *ConvertRecordTypeToStr(hlsl::DXIL::NodeIOKind Type) {
+      return ConvertRecordTypeToStr(toAttrType(Type));
+    }
+    
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeObject; }
+};
+
+class HLSLNodeShareInputOfAttr : public InheritableAttr {
+unsigned nameLength;
+char *name;
+
+unsigned arrayIndex;
+
+
+public:
+  static HLSLNodeShareInputOfAttr *CreateImplicit(ASTContext &Ctx, llvm::StringRef Name, unsigned ArrayIndex, SourceRange Loc = SourceRange()) {
+    HLSLNodeShareInputOfAttr *A = new (Ctx) HLSLNodeShareInputOfAttr(Loc, Ctx, Name, ArrayIndex, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeShareInputOfAttr(SourceRange R, ASTContext &Ctx
+              , llvm::StringRef Name
+              , unsigned ArrayIndex
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeShareInputOf, R, SI, 0, 0)
+              , nameLength(Name.size()),name(new (Ctx, 1) char[nameLength])
+              , arrayIndex(ArrayIndex)
+  {
+      if (!Name.empty())
+        std::memcpy(name, Name.data(), nameLength);
+
+  }
+
+  HLSLNodeShareInputOfAttr(SourceRange R, ASTContext &Ctx
+              , llvm::StringRef Name
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeShareInputOf, R, SI, 0, 0)
+              , nameLength(0),name(0)
+              , arrayIndex()
+  {
+      if (!Name.empty())
+        std::memcpy(name, Name.data(), nameLength);
+  }
+
+  HLSLNodeShareInputOfAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  llvm::StringRef getName() const {
+    return llvm::StringRef(name, nameLength);
+  }
+  unsigned getNameLength() const {
+    return nameLength;
+  }
+  void setName(ASTContext &C, llvm::StringRef S) {
+    nameLength = S.size();
+    this->name = new (C, 1) char [nameLength];
+    if (!S.empty())
+      std::memcpy(this->name, S.data(), nameLength);
+  }
+
+  unsigned getArrayIndex() const {
+    return arrayIndex;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeShareInputOf; }
+};
+
+class HLSLNodeTrackRWInputSharingAttr : public InheritableAttr {
+
+public:
+  static HLSLNodeTrackRWInputSharingAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLNodeTrackRWInputSharingAttr *A = new (Ctx) HLSLNodeTrackRWInputSharingAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLNodeTrackRWInputSharingAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLNodeTrackRWInputSharing, R, SI, 0, 0)
+  {
+  }
+
+  HLSLNodeTrackRWInputSharingAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLNodeTrackRWInputSharing; }
 };
 
 class HLSLNumThreadsAttr : public InheritableAttr {
@@ -4143,6 +4837,31 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLTriangleAdj; }
 };
 
+class HLSLUnboundedSparseNodesAttr : public InheritableParamAttr {
+
+public:
+  static HLSLUnboundedSparseNodesAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLUnboundedSparseNodesAttr *A = new (Ctx) HLSLUnboundedSparseNodesAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLUnboundedSparseNodesAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableParamAttr(attr::HLSLUnboundedSparseNodes, R, SI, 0, 0)
+  {
+  }
+
+  HLSLUnboundedSparseNodesAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLUnboundedSparseNodes; }
+};
+
 class HLSLUniformAttr : public InheritableAttr {
 
 public:
@@ -4311,22 +5030,44 @@ public:
 };
 
 class HLSLWaveSizeAttr : public InheritableAttr {
-int size;
+int min;
+
+int max;
+
+int preferred;
 
 
 public:
-  static HLSLWaveSizeAttr *CreateImplicit(ASTContext &Ctx, int Size, SourceRange Loc = SourceRange()) {
-    HLSLWaveSizeAttr *A = new (Ctx) HLSLWaveSizeAttr(Loc, Ctx, Size, 0);
+  static HLSLWaveSizeAttr *CreateImplicit(ASTContext &Ctx, int Min, int Max, int Preferred, SourceRange Loc = SourceRange()) {
+    HLSLWaveSizeAttr *A = new (Ctx) HLSLWaveSizeAttr(Loc, Ctx, Min, Max, Preferred, 0);
     A->setImplicit(true);
     return A;
   }
 
   HLSLWaveSizeAttr(SourceRange R, ASTContext &Ctx
-              , int Size
+              , int Min
+              , int Max
+              , int Preferred
               , unsigned SI
              )
     : InheritableAttr(attr::HLSLWaveSize, R, SI, 0, 0)
-              , size(Size)
+              , min(Min)
+              , max(Max)
+              , preferred(Preferred)
+  {
+
+
+
+  }
+
+  HLSLWaveSizeAttr(SourceRange R, ASTContext &Ctx
+              , int Min
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLWaveSize, R, SI, 0, 0)
+              , min()
+              , max()
+              , preferred()
   {
 
   }
@@ -4335,11 +5076,29 @@ public:
   void printPretty(raw_ostream &OS,
                    const PrintingPolicy &Policy) const;
   const char *getSpelling() const;
-  int getSize() const {
-    return size;
+  int getMin() const {
+    return min;
   }
 
+  int getMax() const {
+    return max;
+  }
 
+  static const int DefaultMax = 0;
+
+  int getPreferred() const {
+    return preferred;
+  }
+
+  static const int DefaultPreferred = 0;
+
+
+    private:
+    int SpelledArgsCount = 0;
+    public:
+      int getSpelledArgsCount() const { return SpelledArgsCount; }
+      void setSpelledArgsCount(int C) { SpelledArgsCount = C; }
+  
 
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLWaveSize; }
 };
@@ -4537,10 +5296,10 @@ public:
       std::memcpy(this->section, S.data(), sectionLength);
   }
 
-
-  void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const {
-    OS << '(' << getSection() << ')';
-  }
+
+  void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const {
+    OS << '(' << getSection() << ')';
+  }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::InitSeg; }
@@ -4780,68 +5539,68 @@ public:
     return value;
   }
 
-
-  static const char *getOptionName(int Option) {
-    switch(Option) {
-    case Vectorize: return "vectorize";
-    case VectorizeWidth: return "vectorize_width";
-    case Interleave: return "interleave";
-    case InterleaveCount: return "interleave_count";
-    case Unroll: return "unroll";
-    case UnrollCount: return "unroll_count";
-    }
-    llvm_unreachable("Unhandled LoopHint option.");
-  }
-
-  void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const {
-    unsigned SpellingIndex = getSpellingListIndex();
-    // For "#pragma unroll" and "#pragma nounroll" the string "unroll" or
-    // "nounroll" is already emitted as the pragma name.
-    if (SpellingIndex == Pragma_nounroll) {
-      OS << "\n";
-      return;
-    }
-    else if (SpellingIndex == Pragma_unroll) {
-      OS << getValueString(Policy) << "\n";
-      return;
-    }
-
-    assert(SpellingIndex == Pragma_clang_loop && "Unexpected spelling");
-    OS << getOptionName(option) << getValueString(Policy) << "\n";
-  }
-
-  // Return a string containing the loop hint argument including the
-  // enclosing parentheses.
-  std::string getValueString(const PrintingPolicy &Policy) const {
-    std::string ValueName;
-    llvm::raw_string_ostream OS(ValueName);
-    OS << "(";
-    if (option == VectorizeWidth || option == InterleaveCount ||
-        option == UnrollCount)
-      value->printPretty(OS, nullptr, Policy);
-    else if (state == Default)
-      return "";
-    else if (state == Enable)
-      OS << (option == Unroll ? "full" : "enable");
-    else if (state == AssumeSafety)
-      OS << "assume_safety";
-    else
-      OS << "disable";
-    OS << ")";
-    return OS.str();
-  }
-
-  // Return a string suitable for identifying this attribute in diagnostics.
-  std::string getDiagnosticName(const PrintingPolicy &Policy) const {
-    unsigned SpellingIndex = getSpellingListIndex();
-    if (SpellingIndex == Pragma_nounroll)
-      return "#pragma nounroll";
-    else if (SpellingIndex == Pragma_unroll)
-      return "#pragma unroll" + getValueString(Policy);
-
-    assert(SpellingIndex == Pragma_clang_loop && "Unexpected spelling");
-    return getOptionName(option) + getValueString(Policy);
-  }
+
+  static const char *getOptionName(int Option) {
+    switch(Option) {
+    case Vectorize: return "vectorize";
+    case VectorizeWidth: return "vectorize_width";
+    case Interleave: return "interleave";
+    case InterleaveCount: return "interleave_count";
+    case Unroll: return "unroll";
+    case UnrollCount: return "unroll_count";
+    }
+    llvm_unreachable("Unhandled LoopHint option.");
+  }
+
+  void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const {
+    unsigned SpellingIndex = getSpellingListIndex();
+    // For "#pragma unroll" and "#pragma nounroll" the string "unroll" or
+    // "nounroll" is already emitted as the pragma name.
+    if (SpellingIndex == Pragma_nounroll) {
+      OS << "\n";
+      return;
+    }
+    else if (SpellingIndex == Pragma_unroll) {
+      OS << getValueString(Policy) << "\n";
+      return;
+    }
+
+    assert(SpellingIndex == Pragma_clang_loop && "Unexpected spelling");
+    OS << getOptionName(option) << getValueString(Policy) << "\n";
+  }
+
+  // Return a string containing the loop hint argument including the
+  // enclosing parentheses.
+  std::string getValueString(const PrintingPolicy &Policy) const {
+    std::string ValueName;
+    llvm::raw_string_ostream OS(ValueName);
+    OS << "(";
+    if (option == VectorizeWidth || option == InterleaveCount ||
+        option == UnrollCount)
+      value->printPretty(OS, nullptr, Policy);
+    else if (state == Default)
+      return "";
+    else if (state == Enable)
+      OS << (option == Unroll ? "full" : "enable");
+    else if (state == AssumeSafety)
+      OS << "assume_safety";
+    else
+      OS << "disable";
+    OS << ")";
+    return OS.str();
+  }
+
+  // Return a string suitable for identifying this attribute in diagnostics.
+  std::string getDiagnosticName(const PrintingPolicy &Policy) const {
+    unsigned SpellingIndex = getSpellingListIndex();
+    if (SpellingIndex == Pragma_nounroll)
+      return "#pragma nounroll";
+    else if (SpellingIndex == Pragma_unroll)
+      return "#pragma unroll" + getValueString(Policy);
+
+    assert(SpellingIndex == Pragma_clang_loop && "Unexpected spelling");
+    return getOptionName(option) + getValueString(Policy);
+  }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::LoopHint; }
@@ -4927,27 +5686,27 @@ public:
 
   static const bool DefaultBestCase = 1;
 
-
-  static bool hasVBPtrOffsetField(Spelling Inheritance) {
-    return Inheritance == Keyword_unspecified_inheritance;
-  }
-
-  // Only member pointers to functions need a this adjustment, since it can be
-  // combined with the field offset for data pointers.
-  static bool hasNVOffsetField(bool IsMemberFunction, Spelling Inheritance) {
-    return IsMemberFunction && Inheritance >= Keyword_multiple_inheritance;
-  }
-
-  static bool hasVBTableOffsetField(Spelling Inheritance) {
-    return Inheritance >= Keyword_virtual_inheritance;
-  }
-
-  static bool hasOnlyOneField(bool IsMemberFunction,
-                              Spelling Inheritance) {
-    if (IsMemberFunction)
-      return Inheritance <= Keyword_single_inheritance;
-    return Inheritance <= Keyword_multiple_inheritance;
-  }
+
+  static bool hasVBPtrOffsetField(Spelling Inheritance) {
+    return Inheritance == Keyword_unspecified_inheritance;
+  }
+
+  // Only member pointers to functions need a this adjustment, since it can be
+  // combined with the field offset for data pointers.
+  static bool hasNVOffsetField(bool IsMemberFunction, Spelling Inheritance) {
+    return IsMemberFunction && Inheritance >= Keyword_multiple_inheritance;
+  }
+
+  static bool hasVBTableOffsetField(Spelling Inheritance) {
+    return Inheritance >= Keyword_virtual_inheritance;
+  }
+
+  static bool hasOnlyOneField(bool IsMemberFunction,
+                              Spelling Inheritance) {
+    if (IsMemberFunction)
+      return Inheritance <= Keyword_single_inheritance;
+    return Inheritance <= Keyword_multiple_inheritance;
+  }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::MSInheritance; }
@@ -5066,14 +5825,14 @@ public:
     return vdm;
   }
 
-
-  enum Mode {
-    Never,
-    ForVBaseOverride,
-    ForVFTable
-  };
-
-  Mode getVtorDispMode() const { return Mode(vdm); }
+
+  enum Mode {
+    Never,
+    ForVBaseOverride,
+    ForVFTable
+  };
+
+  Mode getVtorDispMode() const { return Mode(vdm); }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::MSVtorDisp; }
@@ -5588,16 +6347,16 @@ public:
   llvm::iterator_range<sanitizers_iterator> sanitizers() const { return llvm::make_range(sanitizers_begin(), sanitizers_end()); }
 
 
-
-    SanitizerMask getMask() const {
-      SanitizerMask Mask = 0;
-      for (auto SanitizerName : sanitizers()) {
-        SanitizerMask ParsedMask =
-            parseSanitizerValue(SanitizerName, /*AllowGroups=*/true);
-        Mask |= expandSanitizerGroups(ParsedMask);
-      }
-      return Mask;
-    }
+
+    SanitizerMask getMask() const {
+      SanitizerMask Mask = 0;
+      for (auto SanitizerName : sanitizers()) {
+        SanitizerMask ParsedMask =
+            parseSanitizerValue(SanitizerName, /*AllowGroups=*/true);
+        Mask |= expandSanitizerGroups(ParsedMask);
+      }
+      return Mask;
+    }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::NoSanitize; }
@@ -5719,13 +6478,13 @@ public:
   llvm::iterator_range<args_iterator> args() const { return llvm::make_range(args_begin(), args_end()); }
 
 
-bool isNonNull(unsigned idx) const {
-    if (!args_size())
-      return true;
-    for (const auto &V : args())
-      if (V == idx)
-        return true;
-    return false;
+bool isNonNull(unsigned idx) const {
+    if (!args_size())
+      return true;
+    for (const auto &V : args())
+      if (V == idx)
+        return true;
+    return false;
   } 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::NonNull; }
@@ -6485,13 +7244,13 @@ public:
   llvm::iterator_range<args_iterator> args() const { return llvm::make_range(args_begin(), args_end()); }
 
 
-
-    enum OwnershipKind { Holds, Returns, Takes };
-    OwnershipKind getOwnKind() const {
-      return isHolds() ? Holds :
-             isTakes() ? Takes :
-             Returns;
-    }
+
+    enum OwnershipKind { Holds, Returns, Takes };
+    OwnershipKind getOwnKind() const {
+      return isHolds() ? Holds :
+             isTakes() ? Takes :
+             Returns;
+    }
   
 
   static bool classof(const Attr *A) { return A->getKind() == attr::Ownership; }
@@ -8458,6 +9217,74 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::VKEarlyAndLateTests; }
 };
 
+class VKExtBuiltinInputAttr : public InheritableAttr {
+int builtInID;
+
+
+public:
+  static VKExtBuiltinInputAttr *CreateImplicit(ASTContext &Ctx, int BuiltInID, SourceRange Loc = SourceRange()) {
+    VKExtBuiltinInputAttr *A = new (Ctx) VKExtBuiltinInputAttr(Loc, Ctx, BuiltInID, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  VKExtBuiltinInputAttr(SourceRange R, ASTContext &Ctx
+              , int BuiltInID
+              , unsigned SI
+             )
+    : InheritableAttr(attr::VKExtBuiltinInput, R, SI, 0, 0)
+              , builtInID(BuiltInID)
+  {
+
+  }
+
+  VKExtBuiltinInputAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  int getBuiltInID() const {
+    return builtInID;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::VKExtBuiltinInput; }
+};
+
+class VKExtBuiltinOutputAttr : public InheritableAttr {
+int builtInID;
+
+
+public:
+  static VKExtBuiltinOutputAttr *CreateImplicit(ASTContext &Ctx, int BuiltInID, SourceRange Loc = SourceRange()) {
+    VKExtBuiltinOutputAttr *A = new (Ctx) VKExtBuiltinOutputAttr(Loc, Ctx, BuiltInID, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  VKExtBuiltinOutputAttr(SourceRange R, ASTContext &Ctx
+              , int BuiltInID
+              , unsigned SI
+             )
+    : InheritableAttr(attr::VKExtBuiltinOutput, R, SI, 0, 0)
+              , builtInID(BuiltInID)
+  {
+
+  }
+
+  VKExtBuiltinOutputAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  int getBuiltInID() const {
+    return builtInID;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::VKExtBuiltinOutput; }
+};
+
 class VKExtensionExtAttr : public InheritableAttr {
 unsigned nameLength;
 char *name;
@@ -9031,6 +9858,40 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::VKShaderRecordNV; }
+};
+
+class VKSpvExecutionModeAttr : public InheritableAttr {
+unsigned executionMode;
+
+
+public:
+  static VKSpvExecutionModeAttr *CreateImplicit(ASTContext &Ctx, unsigned ExecutionMode, SourceRange Loc = SourceRange()) {
+    VKSpvExecutionModeAttr *A = new (Ctx) VKSpvExecutionModeAttr(Loc, Ctx, ExecutionMode, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  VKSpvExecutionModeAttr(SourceRange R, ASTContext &Ctx
+              , unsigned ExecutionMode
+              , unsigned SI
+             )
+    : InheritableAttr(attr::VKSpvExecutionMode, R, SI, 0, 0)
+              , executionMode(ExecutionMode)
+  {
+
+  }
+
+  VKSpvExecutionModeAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getExecutionMode() const {
+    return executionMode;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::VKSpvExecutionMode; }
 };
 
 class VKStencilRefGreaterEqualBackAttr : public InheritableAttr {

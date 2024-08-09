@@ -38,7 +38,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE _GNU_SOURCE)
 target_compile_definitions(${PROJECT_NAME} PRIVATE _CINDEX_LIB_=)
 target_compile_definitions(${PROJECT_NAME} PRIVATE LIBCLANG_CC=)
 
-set_target_cxx_standard(${PROJECT_NAME} 14)
+set_target_cxx_standard(${PROJECT_NAME} 17)
 set_target_c_standard(${PROJECT_NAME} 11)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

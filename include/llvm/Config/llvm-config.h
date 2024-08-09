@@ -71,9 +71,6 @@
 /* LLVM name for the native target MC init function, if available */
 /* #undef LLVM_NATIVE_TARGETMC */
 
-/* Define if this is Unixish platform */
-/* #undef LLVM_ON_UNIX */
-
 /* Define if this is Win32ish platform */
 #if defined(WIN32)
 #define LLVM_ON_WIN32 1

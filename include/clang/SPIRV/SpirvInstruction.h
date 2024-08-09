@@ -67,6 +67,9 @@ public:
     IK_ConstantComposite,
     IK_ConstantNull,
 
+    // OpUndef
+    IK_Undef,
+
     // Function structure kinds
 
     IK_FunctionParameter, // OpFunctionParameter
@@ -109,13 +112,9 @@ public:
     IK_EndPrimitive, // OpEndPrimitive
     IK_EmitVertex,   // OpEmitVertex
 
-    IK_SetMeshOutputsEXT,       // OpSetMeshOutputsEXT
+    IK_SetMeshOutputsEXT, // OpSetMeshOutputsEXT
 
-    // The following section is for group non-uniform instructions.
-    // Used by LLVM-style RTTI; order matters.
-    IK_GroupNonUniformBinaryOp, // Group non-uniform binary operations
-    IK_GroupNonUniformElect,    // OpGroupNonUniformElect
-    IK_GroupNonUniformUnaryOp,  // Group non-uniform unary operations
+    IK_GroupNonUniformOp, // Group non-uniform operations
 
     IK_ImageOp,                   // OpImage*
     IK_ImageQuery,                // OpImageQuery*
@@ -131,6 +130,7 @@ public:
     IK_SpecConstantUnaryOp,       // SpecConstant unary operations
     IK_Store,                     // OpStore
     IK_UnaryOp,                   // Unary operations
+    IK_NullaryOp,                 // Nullary operations
     IK_VectorShuffle,             // OpVectorShuffle
     IK_SpirvIntrinsicInstruction, // Spirv Intrinsic Instructions
 
@@ -169,6 +169,13 @@ public:
 
   // Invokes SPIR-V visitor on this instruction.
   virtual bool invokeVisitor(Visitor *) = 0;
+
+  // Replace operands with a function callable reference, and if needed,
+  // refresh instrunctions result type. If current visitor is in entry
+  // function wrapper, avoid refresh its AST result type.
+  virtual void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper){};
 
   Kind getKind() const { return kind; }
   spv::Op getopcode() const { return opcode; }
@@ -215,8 +222,14 @@ public:
   void setPrecise(bool p = true) { isPrecise_ = p; }
   bool isPrecise() const { return isPrecise_; }
 
+  void setNoninterpolated(bool ni = true) { isNoninterpolated_ = ni; }
+  bool isNoninterpolated() const { return isNoninterpolated_; }
+
   void setBitfieldInfo(const BitfieldInfo &info) { bitfieldInfo = info; }
   llvm::Optional<BitfieldInfo> getBitfieldInfo() const { return bitfieldInfo; }
+
+  void setRasterizerOrdered(bool ro = true) { isRasterizerOrdered_ = ro; }
+  bool isRasterizerOrdered() const { return isRasterizerOrdered_; }
 
   /// Legalization-specific code
   ///
@@ -260,7 +273,9 @@ protected:
   bool isRelaxedPrecision_;
   bool isNonUniform_;
   bool isPrecise_;
+  bool isNoninterpolated_;
   llvm::Optional<BitfieldInfo> bitfieldInfo;
+  bool isRasterizerOrdered_;
 };
 
 /// \brief OpCapability instruction
@@ -534,10 +549,11 @@ private:
 class SpirvVariable : public SpirvInstruction {
 public:
   SpirvVariable(QualType resultType, SourceLocation loc, spv::StorageClass sc,
-                bool isPrecise, SpirvInstruction *initializerId = 0);
+                bool isPrecise, bool isNointerp,
+                SpirvInstruction *initializerId = 0);
 
   SpirvVariable(const SpirvType *spvType, SourceLocation loc,
-                spv::StorageClass sc, bool isPrecise,
+                spv::StorageClass sc, bool isPrecise, bool isNointerp,
                 SpirvInstruction *initializerId = 0);
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvVariable)
@@ -567,11 +583,11 @@ private:
 
 class SpirvFunctionParameter : public SpirvInstruction {
 public:
-  SpirvFunctionParameter(QualType resultType, bool isPrecise,
+  SpirvFunctionParameter(QualType resultType, bool isPrecise, bool isNointerp,
                          SourceLocation loc);
 
   SpirvFunctionParameter(const SpirvType *spvType, bool isPrecise,
-                         SourceLocation loc);
+                         bool isNointerp, SourceLocation loc);
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvFunctionParameter)
 
@@ -747,6 +763,11 @@ public:
   SpirvInstruction *getCondition() const { return condition; }
   SpirvBasicBlock *getTrueLabel() const { return trueLabel; }
   SpirvBasicBlock *getFalseLabel() const { return falseLabel; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    condition = remapOp(condition);
+  }
 
 private:
   SpirvInstruction *condition;
@@ -786,6 +807,11 @@ public:
 
   bool hasReturnValue() const { return returnValue != 0; }
   SpirvInstruction *getReturnValue() const { return returnValue; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    returnValue = remapOp(returnValue);
+  }
 
 private:
   SpirvInstruction *returnValue;
@@ -797,7 +823,7 @@ public:
   SpirvSwitch(
       SourceLocation loc, SpirvInstruction *selector,
       SpirvBasicBlock *defaultLabel,
-      llvm::ArrayRef<std::pair<uint32_t, SpirvBasicBlock *>> &targetsVec);
+      llvm::ArrayRef<std::pair<llvm::APInt, SpirvBasicBlock *>> &targetsVec);
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvSwitch)
 
@@ -810,18 +836,24 @@ public:
 
   SpirvInstruction *getSelector() const { return selector; }
   SpirvBasicBlock *getDefaultLabel() const { return defaultLabel; }
-  llvm::ArrayRef<std::pair<uint32_t, SpirvBasicBlock *>> getTargets() const {
+  llvm::MutableArrayRef<std::pair<llvm::APInt, SpirvBasicBlock *>>
+  getTargets() {
     return targets;
   }
   // Returns the branch label that will be taken for the given literal.
   SpirvBasicBlock *getTargetLabelForLiteral(uint32_t) const;
   // Returns all possible branches that could be taken by the switch statement.
   llvm::ArrayRef<SpirvBasicBlock *> getTargetBranches() const override;
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    selector = remapOp(selector);
+  }
 
 private:
   SpirvInstruction *selector;
   SpirvBasicBlock *defaultLabel;
-  llvm::SmallVector<std::pair<uint32_t, SpirvBasicBlock *>, 4> targets;
+  llvm::SmallVector<std::pair<llvm::APInt, SpirvBasicBlock *>, 4> targets;
 };
 
 /// \brief OpUnreachable instruction
@@ -861,6 +893,12 @@ public:
 
   SpirvInstruction *getBase() const { return base; }
   llvm::ArrayRef<SpirvInstruction *> getIndexes() const { return indices; }
+  void insertIndex(SpirvInstruction *i, uint32_t index) {
+    if (index < indices.size())
+      indices.insert(&indices[index], i);
+    else if (index == indices.size())
+      indices.push_back(i);
+  }
 
 private:
   SpirvInstruction *base;
@@ -921,6 +959,14 @@ public:
   }
   spv::MemorySemanticsMask getMemorySemanticsUnequal() const {
     return memorySemanticUnequal;
+  }
+
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    pointer = remapOp(pointer);
+    value = remapOp(value);
+    comparator = remapOp(comparator);
   }
 
 private:
@@ -1044,6 +1090,12 @@ public:
   bool isSpecConstantOp() const {
     return getopcode() == spv::Op::OpSpecConstantOp;
   }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    operand1 = remapOp(operand1);
+    operand2 = remapOp(operand2);
+  }
 
 private:
   SpirvInstruction *operand1;
@@ -1065,6 +1117,13 @@ public:
   virtual SpirvInstruction *getBase() const { return base; }
   virtual SpirvInstruction *getOffset() const { return offset; }
   virtual SpirvInstruction *getCount() const { return count; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    count = remapOp(count);
+    offset = remapOp(offset);
+    base = remapOp(base);
+  }
 
 protected:
   SpirvBitField(Kind kind, spv::Op opcode, QualType resultType,
@@ -1081,7 +1140,7 @@ class SpirvBitFieldExtract : public SpirvBitField {
 public:
   SpirvBitFieldExtract(QualType resultType, SourceLocation loc,
                        SpirvInstruction *base, SpirvInstruction *offset,
-                       SpirvInstruction *count, bool isSigned);
+                       SpirvInstruction *count);
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvBitFieldExtract)
 
@@ -1091,10 +1150,6 @@ public:
   }
 
   bool invokeVisitor(Visitor *v) override;
-
-  uint32_t isSigned() const {
-    return getopcode() == spv::Op::OpBitFieldSExtract;
-  }
 };
 
 class SpirvBitFieldInsert : public SpirvBitField {
@@ -1114,6 +1169,13 @@ public:
 
   SpirvInstruction *getInsert() const { return insert; }
 
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    SpirvBitField::replaceOperand(remapOp, inEntryFunctionWrapper);
+    insert = remapOp(insert);
+  }
+
 private:
   SpirvInstruction *insert;
 };
@@ -1125,6 +1187,8 @@ public:
     return inst->getKind() >= IK_ConstantBoolean &&
            inst->getKind() <= IK_ConstantNull;
   }
+
+  bool operator==(const SpirvConstant &that) const;
 
   bool isSpecConstant() const;
   void setLiteral(bool literal = true) { literalConstant = literal; }
@@ -1241,6 +1305,22 @@ public:
   bool operator==(const SpirvConstantNull &that) const;
 };
 
+class SpirvUndef : public SpirvInstruction {
+public:
+  SpirvUndef(QualType type);
+
+  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvUndef)
+
+  // For LLVM-style RTTI
+  static bool classof(const SpirvInstruction *inst) {
+    return inst->getKind() == IK_Undef;
+  }
+
+  bool operator==(const SpirvUndef &that) const;
+
+  bool invokeVisitor(Visitor *v) override;
+};
+
 /// \brief OpCompositeConstruct instruction
 class SpirvCompositeConstruct : public SpirvInstruction {
 public:
@@ -1259,6 +1339,13 @@ public:
 
   llvm::ArrayRef<SpirvInstruction *> getConstituents() const {
     return consituents;
+  }
+
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    for (size_t idx = 0; idx < consituents.size(); idx++)
+      consituents[idx] = remapOp(consituents[idx]);
   }
 
 private:
@@ -1284,6 +1371,12 @@ public:
 
   SpirvInstruction *getComposite() const { return composite; }
   llvm::ArrayRef<uint32_t> getIndexes() const { return indices; }
+  void insertIndex(uint32_t i, uint32_t index) {
+    if (index < indices.size())
+      indices.insert(&indices[index], i);
+    else if (index == indices.size())
+      indices.push_back(i);
+  }
 
 private:
   SpirvInstruction *composite;
@@ -1310,6 +1403,12 @@ public:
   SpirvInstruction *getComposite() const { return composite; }
   SpirvInstruction *getObject() const { return object; }
   llvm::ArrayRef<uint32_t> getIndexes() const { return indices; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    composite = remapOp(composite);
+    object = remapOp(object);
+  }
 
 private:
   SpirvInstruction *composite;
@@ -1367,6 +1466,13 @@ public:
   uint32_t getInstruction() const { return instruction; }
   llvm::ArrayRef<SpirvInstruction *> getOperands() const { return operands; }
 
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    for (size_t idx = 0; idx < operands.size(); idx++)
+      operands[idx] = remapOp(operands[idx]);
+  }
+
 private:
   SpirvExtInstImport *instructionSet;
   uint32_t instruction;
@@ -1392,95 +1498,55 @@ public:
 
   SpirvFunction *getFunction() const { return function; }
   llvm::ArrayRef<SpirvInstruction *> getArgs() const { return args; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    for (size_t idx = 0; idx < args.size(); idx++)
+      args[idx] = remapOp(args[idx]);
+  }
 
 private:
   SpirvFunction *function;
   llvm::SmallVector<SpirvInstruction *, 4> args;
 };
 
-/// \brief Base for OpGroupNonUniform* instructions
+/// \brief OpGroupNonUniform* instructions
 class SpirvGroupNonUniformOp : public SpirvInstruction {
 public:
+  SpirvGroupNonUniformOp(spv::Op opcode, QualType resultType, spv::Scope scope,
+                         llvm::ArrayRef<SpirvInstruction *> operands,
+                         SourceLocation loc,
+                         llvm::Optional<spv::GroupOperation> group);
+
+  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvGroupNonUniformOp)
+
   // For LLVM-style RTTI
   static bool classof(const SpirvInstruction *inst) {
-    return inst->getKind() >= IK_GroupNonUniformBinaryOp &&
-           inst->getKind() <= IK_GroupNonUniformUnaryOp;
+    return inst->getKind() == IK_GroupNonUniformOp;
   }
+
+  bool invokeVisitor(Visitor *v) override;
 
   spv::Scope getExecutionScope() const { return execScope; }
 
-protected:
-  SpirvGroupNonUniformOp(Kind kind, spv::Op opcode, QualType resultType,
-                         SourceLocation loc, spv::Scope scope);
+  llvm::ArrayRef<SpirvInstruction *> getOperands() const { return operands; }
 
-private:
-  spv::Scope execScope;
-};
-
-/// \brief OpGroupNonUniform* binary instructions.
-class SpirvNonUniformBinaryOp : public SpirvGroupNonUniformOp {
-public:
-  SpirvNonUniformBinaryOp(spv::Op opcode, QualType resultType,
-                          SourceLocation loc, spv::Scope scope,
-                          SpirvInstruction *arg1, SpirvInstruction *arg2);
-
-  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvNonUniformBinaryOp)
-
-  // For LLVM-style RTTI
-  static bool classof(const SpirvInstruction *inst) {
-    return inst->getKind() == IK_GroupNonUniformBinaryOp;
-  }
-
-  bool invokeVisitor(Visitor *v) override;
-
-  SpirvInstruction *getArg1() const { return arg1; }
-  SpirvInstruction *getArg2() const { return arg2; }
-
-private:
-  SpirvInstruction *arg1;
-  SpirvInstruction *arg2;
-};
-
-/// \brief OpGroupNonUniformElect instruction. This is currently the only
-/// non-uniform instruction that takes no other arguments.
-class SpirvNonUniformElect : public SpirvGroupNonUniformOp {
-public:
-  SpirvNonUniformElect(QualType resultType, SourceLocation loc,
-                       spv::Scope scope);
-
-  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvNonUniformElect)
-
-  // For LLVM-style RTTI
-  static bool classof(const SpirvInstruction *inst) {
-    return inst->getKind() == IK_GroupNonUniformElect;
-  }
-
-  bool invokeVisitor(Visitor *v) override;
-};
-
-/// \brief OpGroupNonUniform* unary instructions.
-class SpirvNonUniformUnaryOp : public SpirvGroupNonUniformOp {
-public:
-  SpirvNonUniformUnaryOp(spv::Op opcode, QualType resultType,
-                         SourceLocation loc, spv::Scope scope,
-                         llvm::Optional<spv::GroupOperation> group,
-                         SpirvInstruction *arg);
-
-  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvNonUniformUnaryOp)
-
-  // For LLVM-style RTTI
-  static bool classof(const SpirvInstruction *inst) {
-    return inst->getKind() == IK_GroupNonUniformUnaryOp;
-  }
-
-  bool invokeVisitor(Visitor *v) override;
-
-  SpirvInstruction *getArg() const { return arg; }
   bool hasGroupOp() const { return groupOp.hasValue(); }
   spv::GroupOperation getGroupOp() const { return groupOp.getValue(); }
 
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    for (auto *operand : getOperands()) {
+      operand = remapOp(operand);
+    }
+    if (inEntryFunctionWrapper)
+      setAstResultType(getOperands()[0]->getAstResultType());
+  }
+
 private:
-  SpirvInstruction *arg;
+  spv::Scope execScope;
+  llvm::SmallVector<SpirvInstruction *, 4> operands;
   llvm::Optional<spv::GroupOperation> groupOp;
 };
 
@@ -1566,6 +1632,19 @@ public:
   SpirvInstruction *getMinLod() const { return minLod; }
   SpirvInstruction *getComponent() const { return component; }
   SpirvInstruction *getTexelToWrite() const { return texelToWrite; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    coordinate = remapOp(coordinate);
+    dref = remapOp(dref);
+    bias = remapOp(bias);
+    lod = remapOp(lod);
+    gradDx = remapOp(gradDx);
+    gradDy = remapOp(gradDy);
+    offset = remapOp(offset);
+    minLod = remapOp(minLod);
+    component = remapOp(component);
+  }
 
 private:
   SpirvInstruction *image;
@@ -1615,6 +1694,12 @@ public:
   SpirvInstruction *getLod() const { return lod; }
   bool hasCoordinate() const { return coordinate != nullptr; }
   SpirvInstruction *getCoordinate() const { return coordinate; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    lod = remapOp(lod);
+    coordinate = remapOp(coordinate);
+  }
 
 private:
   SpirvInstruction *image;
@@ -1666,6 +1751,11 @@ public:
   SpirvInstruction *getImage() const { return image; }
   SpirvInstruction *getCoordinate() const { return coordinate; }
   SpirvInstruction *getSample() const { return sample; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    coordinate = remapOp(coordinate);
+  }
 
 private:
   SpirvInstruction *image;
@@ -1698,6 +1788,13 @@ public:
   void setAlignment(uint32_t alignment);
   bool hasAlignment() const { return memoryAlignment.hasValue(); }
   uint32_t getAlignment() const { return memoryAlignment.getValue(); }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    pointer = remapOp(pointer);
+    if (inEntryFunctionWrapper)
+      setAstResultType(pointer->getAstResultType());
+  }
 
 private:
   SpirvInstruction *pointer;
@@ -1721,6 +1818,13 @@ public:
   bool invokeVisitor(Visitor *v) override;
 
   SpirvInstruction *getPointer() const { return pointer; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    pointer = remapOp(pointer);
+    if (inEntryFunctionWrapper)
+      setAstResultType(pointer->getAstResultType());
+  }
 
 private:
   SpirvInstruction *pointer;
@@ -1772,6 +1876,13 @@ public:
   SpirvInstruction *getCondition() const { return condition; }
   SpirvInstruction *getTrueObject() const { return trueObject; }
   SpirvInstruction *getFalseObject() const { return falseObject; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    condition = remapOp(condition);
+    trueObject = remapOp(trueObject);
+    falseObject = remapOp(falseObject);
+  }
 
 private:
   SpirvInstruction *condition;
@@ -1855,12 +1966,44 @@ public:
   void setAlignment(uint32_t alignment);
   bool hasAlignment() const { return memoryAlignment.hasValue(); }
   uint32_t getAlignment() const { return memoryAlignment.getValue(); }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    pointer = remapOp(pointer);
+    object = remapOp(object);
+    if (inEntryFunctionWrapper &&
+        object->getAstResultType() != pointer->getAstResultType() &&
+        isa<SpirvVariable>(pointer) &&
+        pointer->getStorageClass() == spv::StorageClass::Output)
+      pointer->setAstResultType(object->getAstResultType());
+  }
 
 private:
   SpirvInstruction *pointer;
   SpirvInstruction *object;
   llvm::Optional<spv::MemoryAccessMask> memoryAccess;
   llvm::Optional<uint32_t> memoryAlignment;
+};
+
+/// \brief Represents SPIR-V nullary operation instructions.
+///
+/// This class includes:
+/// ----------------------------------------------------------------------------
+/// OpBeginInvocationInterlockEXT // FragmentShader*InterlockEXT capability
+/// OpEndInvocationInterlockEXT // FragmentShader*InterlockEXT capability
+/// ----------------------------------------------------------------------------
+class SpirvNullaryOp : public SpirvInstruction {
+public:
+  SpirvNullaryOp(spv::Op opcode, SourceLocation loc, SourceRange range = {});
+
+  DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvNullaryOp)
+
+  // For LLVM-style RTTI
+  static bool classof(const SpirvInstruction *inst) {
+    return inst->getKind() == IK_NullaryOp;
+  }
+
+  bool invokeVisitor(Visitor *v) override;
 };
 
 /// \brief Represents SPIR-V unary operation instructions.
@@ -1920,6 +2063,11 @@ public:
 
   SpirvInstruction *getOperand() const { return operand; }
   bool isConversionOp() const;
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    operand = remapOp(operand);
+  }
 
 private:
   SpirvInstruction *operand;
@@ -1945,6 +2093,12 @@ public:
   SpirvInstruction *getVec1() const { return vec1; }
   SpirvInstruction *getVec2() const { return vec2; }
   llvm::ArrayRef<uint32_t> getComponents() const { return components; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    vec1 = remapOp(vec1);
+    vec2 = remapOp(vec2);
+  }
 
 private:
   SpirvInstruction *vec1;
@@ -2106,6 +2260,12 @@ public:
   llvm::ArrayRef<std::string> getExtensions() const { return extensions; }
   SpirvExtInstImport *getInstructionSet() const { return instructionSet; }
   uint32_t getInstruction() const { return instruction; }
+  void replaceOperand(
+      llvm::function_ref<SpirvInstruction *(SpirvInstruction *)> remapOp,
+      bool inEntryFunctionWrapper) override {
+    for (size_t idx = 0; idx < operands.size(); idx++)
+      operands[idx] = remapOp(operands[idx]);
+  }
 
 private:
   uint32_t instruction;
@@ -2165,10 +2325,8 @@ private:
 /// \brief OpEmitMeshTasksEXT instruction.
 class SpirvEmitMeshTasksEXT : public SpirvInstruction {
 public:
-  SpirvEmitMeshTasksEXT(SpirvInstruction* xDim,
-                        SpirvInstruction* yDim,
-                        SpirvInstruction* zDim,
-                        SpirvInstruction* payload,
+  SpirvEmitMeshTasksEXT(SpirvInstruction *xDim, SpirvInstruction *yDim,
+                        SpirvInstruction *zDim, SpirvInstruction *payload,
                         SourceLocation loc, SourceRange range = {});
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvEmitMeshTasksEXT)
@@ -2195,9 +2353,8 @@ private:
 /// \brief OpSetMeshOutputsEXT instruction.
 class SpirvSetMeshOutputsEXT : public SpirvInstruction {
 public:
-  SpirvSetMeshOutputsEXT(SpirvInstruction* vertCount,
-                         SpirvInstruction* primCount, 
-                         SourceLocation loc,
+  SpirvSetMeshOutputsEXT(SpirvInstruction *vertCount,
+                         SpirvInstruction *primCount, SourceLocation loc,
                          SourceRange range = {});
 
   DEFINE_RELEASE_MEMORY_FOR_CLASS(SpirvSetMeshOutputsEXT)

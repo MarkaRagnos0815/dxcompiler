@@ -57,6 +57,7 @@ DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvConstantInteger)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvConstantFloat)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvConstantComposite)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvConstantNull)
+DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvUndef)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvCompositeConstruct)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvCompositeExtract)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvCompositeInsert)
@@ -64,9 +65,7 @@ DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvEmitVertex)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvEndPrimitive)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvExtInst)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvFunctionCall)
-DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvNonUniformBinaryOp)
-DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvNonUniformElect)
-DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvNonUniformUnaryOp)
+DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvGroupNonUniformOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvImageOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvImageQuery)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvImageSparseTexelsResident)
@@ -78,6 +77,7 @@ DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvSelect)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvSpecConstantBinaryOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvSpecConstantUnaryOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvStore)
+DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvNullaryOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvUnaryOp)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvVectorShuffle)
 DEFINE_INVOKE_VISITOR_FOR_CLASS(SpirvArrayLength)
@@ -121,7 +121,8 @@ SpirvInstruction::SpirvInstruction(Kind k, spv::Op op, QualType astType,
       srcRange(range), debugName(), resultType(nullptr), resultTypeId(0),
       layoutRule(SpirvLayoutRule::Void), containsAlias(false),
       storageClass(spv::StorageClass::Function), isRValue_(false),
-      isRelaxedPrecision_(false), isNonUniform_(false), isPrecise_(false) {}
+      isRelaxedPrecision_(false), isNonUniform_(false), isPrecise_(false),
+      isNoninterpolated_(false), isRasterizerOrdered_(false) {}
 
 bool SpirvInstruction::isArithmeticInstruction() const {
   switch (opcode) {
@@ -290,40 +291,44 @@ bool SpirvDecoration::operator==(const SpirvDecoration &that) const {
 
 SpirvVariable::SpirvVariable(QualType resultType, SourceLocation loc,
                              spv::StorageClass sc, bool precise,
-                             SpirvInstruction *initializerInst)
+                             bool isNointerp, SpirvInstruction *initializerInst)
     : SpirvInstruction(IK_Variable, spv::Op::OpVariable, resultType, loc),
       initializer(initializerInst), descriptorSet(-1), binding(-1),
       hlslUserType("") {
   setStorageClass(sc);
   setPrecise(precise);
+  setNoninterpolated(isNointerp);
 }
 
 SpirvVariable::SpirvVariable(const SpirvType *spvType, SourceLocation loc,
                              spv::StorageClass sc, bool precise,
-                             SpirvInstruction *initializerInst)
+                             bool isNointerp, SpirvInstruction *initializerInst)
     : SpirvInstruction(IK_Variable, spv::Op::OpVariable, QualType(), loc),
       initializer(initializerInst), descriptorSet(-1), binding(-1),
       hlslUserType("") {
   setResultType(spvType);
   setStorageClass(sc);
   setPrecise(precise);
+  setNoninterpolated(isNointerp);
 }
 
 SpirvFunctionParameter::SpirvFunctionParameter(QualType resultType,
-                                               bool isPrecise,
+                                               bool isPrecise, bool isNointerp,
                                                SourceLocation loc)
     : SpirvInstruction(IK_FunctionParameter, spv::Op::OpFunctionParameter,
                        resultType, loc) {
   setPrecise(isPrecise);
+  setNoninterpolated(isNointerp);
 }
 
 SpirvFunctionParameter::SpirvFunctionParameter(const SpirvType *spvType,
-                                               bool isPrecise,
+                                               bool isPrecise, bool isNointerp,
                                                SourceLocation loc)
     : SpirvInstruction(IK_FunctionParameter, spv::Op::OpFunctionParameter,
                        QualType(), loc) {
   setResultType(spvType);
   setPrecise(isPrecise);
+  setNoninterpolated(isNointerp);
 }
 
 SpirvMerge::SpirvMerge(Kind kind, spv::Op op, SourceLocation loc,
@@ -378,7 +383,7 @@ SpirvReturn::SpirvReturn(SourceLocation loc, SpirvInstruction *retVal,
 SpirvSwitch::SpirvSwitch(
     SourceLocation loc, SpirvInstruction *selectorInst,
     SpirvBasicBlock *defaultLbl,
-    llvm::ArrayRef<std::pair<uint32_t, SpirvBasicBlock *>> &targetsVec)
+    llvm::ArrayRef<std::pair<llvm::APInt, SpirvBasicBlock *>> &targetsVec)
     : SpirvBranching(IK_Switch, spv::Op::OpSwitch, loc), selector(selectorInst),
       defaultLabel(defaultLbl), targets(targetsVec.begin(), targetsVec.end()) {}
 
@@ -407,7 +412,10 @@ SpirvAccessChain::SpirvAccessChain(QualType resultType, SourceLocation loc,
                                    SourceRange range)
     : SpirvInstruction(IK_AccessChain, spv::Op::OpAccessChain, resultType, loc,
                        range),
-      base(baseInst), indices(indexVec.begin(), indexVec.end()) {}
+      base(baseInst), indices(indexVec.begin(), indexVec.end()) {
+  if (baseInst && baseInst->isNoninterpolated())
+    setNoninterpolated();
+}
 
 SpirvAtomic::SpirvAtomic(spv::Op op, QualType resultType, SourceLocation loc,
                          SpirvInstruction *pointerInst, spv::Scope s,
@@ -465,12 +473,15 @@ SpirvBitField::SpirvBitField(Kind kind, spv::Op op, QualType resultType,
     : SpirvInstruction(kind, op, resultType, loc), base(baseInst),
       offset(offsetInst), count(countInst) {}
 
-SpirvBitFieldExtract::SpirvBitFieldExtract(
-    QualType resultType, SourceLocation loc, SpirvInstruction *baseInst,
-    SpirvInstruction *offsetInst, SpirvInstruction *countInst, bool isSigned)
+SpirvBitFieldExtract::SpirvBitFieldExtract(QualType resultType,
+                                           SourceLocation loc,
+                                           SpirvInstruction *baseInst,
+                                           SpirvInstruction *offsetInst,
+                                           SpirvInstruction *countInst)
     : SpirvBitField(IK_BitFieldExtract,
-                    isSigned ? spv::Op::OpBitFieldSExtract
-                             : spv::Op::OpBitFieldUExtract,
+                    resultType->isSignedIntegerOrEnumerationType()
+                        ? spv::Op::OpBitFieldSExtract
+                        : spv::Op::OpBitFieldUExtract,
                     resultType, loc, baseInst, offsetInst, countInst) {}
 
 SpirvBitFieldInsert::SpirvBitFieldInsert(QualType resultType,
@@ -504,6 +515,43 @@ SpirvConstant::SpirvConstant(Kind kind, spv::Op op, QualType resultType,
                        /*SourceLocation*/ {}),
       literalConstant(literal) {}
 
+bool SpirvConstant::operator==(const SpirvConstant &that) const {
+  if (auto *booleanInst = dyn_cast<SpirvConstantBoolean>(this)) {
+    auto *thatBooleanInst = dyn_cast<SpirvConstantBoolean>(&that);
+    if (thatBooleanInst == nullptr)
+      return false;
+    return *booleanInst == *thatBooleanInst;
+  } else if (auto *integerInst = dyn_cast<SpirvConstantInteger>(this)) {
+    auto *thatIntegerInst = dyn_cast<SpirvConstantInteger>(&that);
+    if (thatIntegerInst == nullptr)
+      return false;
+    return *integerInst == *thatIntegerInst;
+  } else if (auto *floatInst = dyn_cast<SpirvConstantFloat>(this)) {
+    auto *thatFloatInst = dyn_cast<SpirvConstantFloat>(&that);
+    if (thatFloatInst == nullptr)
+      return false;
+    return *floatInst == *thatFloatInst;
+  } else if (auto *compositeInst = dyn_cast<SpirvConstantComposite>(this)) {
+    auto *thatCompositeInst = dyn_cast<SpirvConstantComposite>(&that);
+    if (thatCompositeInst == nullptr)
+      return false;
+    return *compositeInst == *thatCompositeInst;
+  } else if (auto *nullInst = dyn_cast<SpirvConstantNull>(this)) {
+    auto *thatNullInst = dyn_cast<SpirvConstantNull>(&that);
+    if (thatNullInst == nullptr)
+      return false;
+    return *nullInst == *thatNullInst;
+  } else if (auto *nullInst = dyn_cast<SpirvUndef>(this)) {
+    auto *thatNullInst = dyn_cast<SpirvUndef>(&that);
+    if (thatNullInst == nullptr)
+      return false;
+    return *nullInst == *thatNullInst;
+  }
+
+  assert(false && "operator== undefined for SpirvConstant subclass");
+  return false;
+}
+
 bool SpirvConstant::isSpecConstant() const {
   return opcode == spv::Op::OpSpecConstant ||
          opcode == spv::Op::OpSpecConstantTrue ||
@@ -532,7 +580,7 @@ SpirvConstantInteger::SpirvConstantInteger(QualType type, llvm::APInt val,
                     isSpecConst ? spv::Op::OpSpecConstant : spv::Op::OpConstant,
                     type),
       value(val) {
-  assert(type->isIntegerType());
+  assert(type->isIntegralOrEnumerationType());
 }
 
 bool SpirvConstantInteger::operator==(const SpirvConstantInteger &that) const {
@@ -571,6 +619,15 @@ bool SpirvConstantNull::operator==(const SpirvConstantNull &that) const {
          astResultType == that.astResultType;
 }
 
+SpirvUndef::SpirvUndef(QualType type)
+    : SpirvInstruction(IK_Undef, spv::Op::OpUndef, type,
+                       /*SourceLocation*/ {}) {}
+
+bool SpirvUndef::operator==(const SpirvUndef &that) const {
+  return opcode == that.opcode && resultType == that.resultType &&
+         astResultType == that.astResultType;
+}
+
 SpirvCompositeExtract::SpirvCompositeExtract(QualType resultType,
                                              SourceLocation loc,
                                              SpirvInstruction *compositeInst,
@@ -578,7 +635,10 @@ SpirvCompositeExtract::SpirvCompositeExtract(QualType resultType,
                                              SourceRange range)
     : SpirvInstruction(IK_CompositeExtract, spv::Op::OpCompositeExtract,
                        resultType, loc, range),
-      composite(compositeInst), indices(indexVec.begin(), indexVec.end()) {}
+      composite(compositeInst), indices(indexVec.begin(), indexVec.end()) {
+  if (compositeInst && compositeInst->isNoninterpolated())
+    setNoninterpolated();
+}
 
 SpirvCompositeInsert::SpirvCompositeInsert(QualType resultType,
                                            SourceLocation loc,
@@ -615,65 +675,70 @@ SpirvFunctionCall::SpirvFunctionCall(QualType resultType, SourceLocation loc,
                        loc, range),
       function(fn), args(argsVec.begin(), argsVec.end()) {}
 
-SpirvGroupNonUniformOp::SpirvGroupNonUniformOp(Kind kind, spv::Op op,
-                                               QualType resultType,
-                                               SourceLocation loc,
-                                               spv::Scope scope)
-    : SpirvInstruction(kind, op, resultType, loc), execScope(scope) {}
+SpirvGroupNonUniformOp::SpirvGroupNonUniformOp(
+    spv::Op op, QualType resultType, spv::Scope scope,
+    llvm::ArrayRef<SpirvInstruction *> operandsVec, SourceLocation loc,
+    llvm::Optional<spv::GroupOperation> group)
+    : SpirvInstruction(IK_GroupNonUniformOp, op, resultType, loc),
+      execScope(scope), operands(operandsVec.begin(), operandsVec.end()),
+      groupOp(group) {
+  switch (op) {
 
-SpirvNonUniformBinaryOp::SpirvNonUniformBinaryOp(
-    spv::Op op, QualType resultType, SourceLocation loc, spv::Scope scope,
-    SpirvInstruction *arg1Inst, SpirvInstruction *arg2Inst)
-    : SpirvGroupNonUniformOp(IK_GroupNonUniformBinaryOp, op, resultType, loc,
-                             scope),
-      arg1(arg1Inst), arg2(arg2Inst) {
-  assert(op == spv::Op::OpGroupNonUniformBroadcast ||
-         op == spv::Op::OpGroupNonUniformBallotBitExtract ||
-         op == spv::Op::OpGroupNonUniformShuffle ||
-         op == spv::Op::OpGroupNonUniformShuffleXor ||
-         op == spv::Op::OpGroupNonUniformShuffleUp ||
-         op == spv::Op::OpGroupNonUniformShuffleDown ||
-         op == spv::Op::OpGroupNonUniformQuadBroadcast ||
-         op == spv::Op::OpGroupNonUniformQuadSwap);
-}
+  // Group non-uniform nullary operations.
+  case spv::Op::OpGroupNonUniformElect:
+    assert(operandsVec.size() == 0);
+    break;
 
-SpirvNonUniformElect::SpirvNonUniformElect(QualType resultType,
-                                           SourceLocation loc, spv::Scope scope)
-    : SpirvGroupNonUniformOp(IK_GroupNonUniformElect,
-                             spv::Op::OpGroupNonUniformElect, resultType, loc,
-                             scope) {}
+  // Group non-uniform unary operations.
+  case spv::Op::OpGroupNonUniformAll:
+  case spv::Op::OpGroupNonUniformAny:
+  case spv::Op::OpGroupNonUniformAllEqual:
+  case spv::Op::OpGroupNonUniformBroadcastFirst:
+  case spv::Op::OpGroupNonUniformBallot:
+  case spv::Op::OpGroupNonUniformInverseBallot:
+  case spv::Op::OpGroupNonUniformBallotBitCount:
+  case spv::Op::OpGroupNonUniformBallotFindLSB:
+  case spv::Op::OpGroupNonUniformBallotFindMSB:
+  case spv::Op::OpGroupNonUniformSMin:
+  case spv::Op::OpGroupNonUniformUMin:
+  case spv::Op::OpGroupNonUniformFMin:
+  case spv::Op::OpGroupNonUniformSMax:
+  case spv::Op::OpGroupNonUniformUMax:
+  case spv::Op::OpGroupNonUniformFMax:
+  case spv::Op::OpGroupNonUniformLogicalAnd:
+  case spv::Op::OpGroupNonUniformLogicalOr:
+  case spv::Op::OpGroupNonUniformLogicalXor:
+    assert(operandsVec.size() == 1);
+    break;
 
-SpirvNonUniformUnaryOp::SpirvNonUniformUnaryOp(
-    spv::Op op, QualType resultType, SourceLocation loc, spv::Scope scope,
-    llvm::Optional<spv::GroupOperation> group, SpirvInstruction *argInst)
-    : SpirvGroupNonUniformOp(IK_GroupNonUniformUnaryOp, op, resultType, loc,
-                             scope),
-      arg(argInst), groupOp(group) {
-  assert(op == spv::Op::OpGroupNonUniformAll ||
-         op == spv::Op::OpGroupNonUniformAny ||
-         op == spv::Op::OpGroupNonUniformAllEqual ||
-         op == spv::Op::OpGroupNonUniformBroadcastFirst ||
-         op == spv::Op::OpGroupNonUniformBallot ||
-         op == spv::Op::OpGroupNonUniformInverseBallot ||
-         op == spv::Op::OpGroupNonUniformBallotBitCount ||
-         op == spv::Op::OpGroupNonUniformBallotFindLSB ||
-         op == spv::Op::OpGroupNonUniformBallotFindMSB ||
-         op == spv::Op::OpGroupNonUniformIAdd ||
-         op == spv::Op::OpGroupNonUniformFAdd ||
-         op == spv::Op::OpGroupNonUniformIMul ||
-         op == spv::Op::OpGroupNonUniformFMul ||
-         op == spv::Op::OpGroupNonUniformSMin ||
-         op == spv::Op::OpGroupNonUniformUMin ||
-         op == spv::Op::OpGroupNonUniformFMin ||
-         op == spv::Op::OpGroupNonUniformSMax ||
-         op == spv::Op::OpGroupNonUniformUMax ||
-         op == spv::Op::OpGroupNonUniformFMax ||
-         op == spv::Op::OpGroupNonUniformBitwiseAnd ||
-         op == spv::Op::OpGroupNonUniformBitwiseOr ||
-         op == spv::Op::OpGroupNonUniformBitwiseXor ||
-         op == spv::Op::OpGroupNonUniformLogicalAnd ||
-         op == spv::Op::OpGroupNonUniformLogicalOr ||
-         op == spv::Op::OpGroupNonUniformLogicalXor);
+  // Group non-uniform binary operations.
+  case spv::Op::OpGroupNonUniformBroadcast:
+  case spv::Op::OpGroupNonUniformBallotBitExtract:
+  case spv::Op::OpGroupNonUniformShuffle:
+  case spv::Op::OpGroupNonUniformShuffleXor:
+  case spv::Op::OpGroupNonUniformShuffleUp:
+  case spv::Op::OpGroupNonUniformShuffleDown:
+  case spv::Op::OpGroupNonUniformQuadBroadcast:
+  case spv::Op::OpGroupNonUniformQuadSwap:
+    assert(operandsVec.size() == 2);
+    break;
+
+  // Group non-uniform operations with a required and optional operand.
+  case spv::Op::OpGroupNonUniformIAdd:
+  case spv::Op::OpGroupNonUniformFAdd:
+  case spv::Op::OpGroupNonUniformIMul:
+  case spv::Op::OpGroupNonUniformFMul:
+  case spv::Op::OpGroupNonUniformBitwiseAnd:
+  case spv::Op::OpGroupNonUniformBitwiseOr:
+  case spv::Op::OpGroupNonUniformBitwiseXor:
+    assert(operandsVec.size() >= 1 && operandsVec.size() <= 2);
+    break;
+
+  // Unexpected opcode.
+  default:
+    assert(false && "Unexpected Group non-uniform opcode");
+    break;
+  }
 }
 
 SpirvImageOp::SpirvImageOp(
@@ -846,6 +911,10 @@ void SpirvStore::setAlignment(uint32_t alignment) {
   }
   memoryAlignment = alignment;
 }
+
+SpirvNullaryOp::SpirvNullaryOp(spv::Op opcode, SourceLocation loc,
+                               SourceRange range)
+    : SpirvInstruction(IK_NullaryOp, opcode, QualType(), loc, range) {}
 
 SpirvUnaryOp::SpirvUnaryOp(spv::Op opcode, QualType resultType,
                            SourceLocation loc, SpirvInstruction *op,
@@ -1116,9 +1185,10 @@ SpirvEmitMeshTasksEXT::SpirvEmitMeshTasksEXT(
                        QualType(), loc, range),
       xDim(xDim), yDim(yDim), zDim(zDim), payload(payload) {}
 
-SpirvSetMeshOutputsEXT::SpirvSetMeshOutputsEXT(
-    SpirvInstruction *vertCount, SpirvInstruction *primCount,
-    SourceLocation loc, SourceRange range)
+SpirvSetMeshOutputsEXT::SpirvSetMeshOutputsEXT(SpirvInstruction *vertCount,
+                                               SpirvInstruction *primCount,
+                                               SourceLocation loc,
+                                               SourceRange range)
     : SpirvInstruction(IK_SetMeshOutputsEXT, spv::Op::OpSetMeshOutputsEXT,
                        QualType(), loc, range),
       vertCount(vertCount), primCount(primCount) {}

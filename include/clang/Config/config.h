@@ -30,7 +30,7 @@
 /* #undef CLANG_HAVE_LIBXML */
 
 /* The LLVM product name and version */
-#define BACKEND_PACKAGE_STRING "LLVM 3.7-v1.7.2308-6-g66faf0d7b"
+#define BACKEND_PACKAGE_STRING "LLVM 3.7-v1.8.2407-dirty"
 
 /* Linker version detected at compile time. */
 /* #undef HOST_LINK_VERSION */

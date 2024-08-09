@@ -9,7 +9,7 @@ file(GLOB_RECURSE PROJECT_SOURCE_FILES *.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCE_FILES})
 
-set_target_cxx_standard(${PROJECT_NAME} 14)
+set_target_cxx_standard(${PROJECT_NAME} 17)
 set_target_c_standard(${PROJECT_NAME} 11)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)

@@ -134,7 +134,12 @@ void AggressiveDCEPass::AddStores(Function* func, uint32_t ptrId) {
         }
         break;
       // If default, assume it stores e.g. frexp, modf, function call
-      case spv::Op::OpStore:
+      case spv::Op::OpStore: {
+        const uint32_t kStoreTargetAddrInIdx = 0;
+        if (user->GetSingleWordInOperand(kStoreTargetAddrInIdx) == ptrId)
+          AddToWorklist(user);
+        break;
+      }
       default:
         AddToWorklist(user);
         break;
@@ -941,6 +946,8 @@ Pass::Status AggressiveDCEPass::Process() {
 
 void AggressiveDCEPass::InitExtensions() {
   extensions_allowlist_.clear();
+
+  // clang-format off
   extensions_allowlist_.insert({
       "SPV_AMD_shader_explicit_vertex_parameter",
       "SPV_AMD_shader_trinary_minmax",
@@ -983,11 +990,13 @@ void AggressiveDCEPass::InitExtensions() {
       "SPV_NV_shader_image_footprint",
       "SPV_NV_shading_rate",
       "SPV_NV_mesh_shader",
+      "SPV_EXT_mesh_shader",
       "SPV_NV_ray_tracing",
       "SPV_KHR_ray_tracing",
       "SPV_KHR_ray_query",
       "SPV_EXT_fragment_invocation_density",
       "SPV_EXT_physical_storage_buffer",
+      "SPV_KHR_physical_storage_buffer",
       "SPV_KHR_terminate_invocation",
       "SPV_KHR_shader_clock",
       "SPV_KHR_vulkan_memory_model",
@@ -998,7 +1007,13 @@ void AggressiveDCEPass::InitExtensions() {
       "SPV_KHR_uniform_group_instructions",
       "SPV_KHR_fragment_shader_barycentric",
       "SPV_NV_bindless_texture",
+      "SPV_EXT_shader_atomic_float_add",
+      "SPV_EXT_fragment_shader_interlock",
+      "SPV_NV_compute_shader_derivatives",
+      "SPV_NV_cooperative_matrix",
+      "SPV_KHR_cooperative_matrix"
   });
+  // clang-format on
 }
 
 Instruction* AggressiveDCEPass::GetHeaderBranch(BasicBlock* blk) {
