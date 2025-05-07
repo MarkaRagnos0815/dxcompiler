@@ -406,6 +406,9 @@
   case attr::HLSLGroupShared: {
     break;
   }
+  case attr::HLSLHitObject: {
+    break;
+  }
   case attr::HLSLIn: {
     break;
   }
@@ -437,6 +440,9 @@
     break;
   }
   case attr::HLSLLoop: {
+    break;
+  }
+  case attr::HLSLMatrix: {
     break;
   }
   case attr::HLSLMaxRecords: {
@@ -610,6 +616,18 @@
   case attr::HLSLRayPayload: {
     break;
   }
+  case attr::HLSLRayQueryObject: {
+    break;
+  }
+  case attr::HLSLReorderCoherent: {
+    break;
+  }
+  case attr::HLSLResource: {
+    const HLSLResourceAttr *SA = cast<HLSLResourceAttr>(A);
+    OS << " " << SA->getResKindUint();
+    OS << " " << SA->getResClassUint();
+    break;
+  }
   case attr::HLSLRootSignature: {
     const HLSLRootSignatureAttr *SA = cast<HLSLRootSignatureAttr>(A);
     OS << " \"" << SA->getSignatureName() << "\"";
@@ -634,6 +652,22 @@
   case attr::HLSLSnorm: {
     break;
   }
+  case attr::HLSLStreamOutput: {
+    const HLSLStreamOutputAttr *SA = cast<HLSLStreamOutputAttr>(A);
+    OS << " " << SA->getPrimVertices();
+    break;
+  }
+  case attr::HLSLSubObject: {
+    const HLSLSubObjectAttr *SA = cast<HLSLSubObjectAttr>(A);
+    OS << " " << SA->getSubObjKindUint();
+    OS << " " << SA->getHitGroupType();
+    break;
+  }
+  case attr::HLSLTessPatch: {
+    const HLSLTessPatchAttr *SA = cast<HLSLTessPatchAttr>(A);
+    if (SA->getIsInput()) OS << " IsInput";
+    break;
+  }
   case attr::HLSLTriangle: {
     break;
   }
@@ -652,6 +686,9 @@
   case attr::HLSLUnroll: {
     const HLSLUnrollAttr *SA = cast<HLSLUnrollAttr>(A);
     OS << " " << SA->getCount();
+    break;
+  }
+  case attr::HLSLVector: {
     break;
   }
   case attr::HLSLVertices: {
@@ -1172,10 +1209,16 @@
     OS << " \"" << SA->getGuid() << "\"";
     break;
   }
+  case attr::VKAliasedPointer: {
+    break;
+  }
   case attr::VKBinding: {
     const VKBindingAttr *SA = cast<VKBindingAttr>(A);
     OS << " " << SA->getBinding();
     OS << " " << SA->getSet();
+    break;
+  }
+  case attr::VKBufferPointer: {
     break;
   }
   case attr::VKBuiltIn: {

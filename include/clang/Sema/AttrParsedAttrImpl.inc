@@ -694,6 +694,15 @@ static bool checkHLSLGroupSharedAppertainsTo(Sema &S, const AttributeList &Attr,
   return true;
 }
 
+static bool checkHLSLHitObjectAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
 static bool checkHLSLInAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
   if (!isa<ParmVarDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
@@ -743,6 +752,15 @@ static bool checkHLSLLinearAppertainsTo(Sema &S, const AttributeList &Attr, cons
   if (!isa<FunctionDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
       << Attr.getName() << ExpectedFunctionOrParamOrField;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLMatrixAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
     return false;
   }
   return true;
@@ -847,6 +865,33 @@ static bool checkHLSLPrimitivesAppertainsTo(Sema &S, const AttributeList &Attr, 
   return true;
 }
 
+static bool checkHLSLRayQueryObjectAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLReorderCoherentAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<VarDecl>(D) && !isa<FunctionDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedVariableOrFunction;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLResourceAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
 static bool checkHLSLRowMajorAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
   if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
@@ -892,6 +937,33 @@ static bool checkHLSLSnormAppertainsTo(Sema &S, const AttributeList &Attr, const
   return true;
 }
 
+static bool checkHLSLStreamOutputAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLSubObjectAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLTessPatchAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
+    return false;
+  }
+  return true;
+}
+
 static bool checkHLSLTriangleAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
   if (!isa<ParmVarDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
@@ -932,6 +1004,15 @@ static bool checkHLSLUnormAppertainsTo(Sema &S, const AttributeList &Attr, const
   if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
       << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
+    return false;
+  }
+  return true;
+}
+
+static bool checkHLSLVectorAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<CXXRecordDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedClass;
     return false;
   }
   return true;
@@ -1720,6 +1801,23 @@ static bool checkMicrosoftExtBorlandLangOpts(Sema &S, const AttributeList &Attr)
   return false;
 }
 
+static bool checkVKAliasedPointerAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
+  if (!isa<VarDecl>(D) && !isa<ParmVarDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
+      << Attr.getName() << ExpectedVariableOrParam;
+    return false;
+  }
+  return true;
+}
+
+static bool checkSPIRVLangOpts(Sema &S, const AttributeList &Attr) {
+  if (S.LangOpts.SPIRV)
+    return true;
+
+  S.Diag(Attr.getLoc(), diag::warn_attribute_ignored) << Attr.getName();
+  return false;
+}
+
 static bool isConstantTextureBuffer(const Decl *D) {
   if (const VarDecl *S = dyn_cast<VarDecl>(D))
     return S->hasGlobalStorage() && S->getType()->getAs<RecordType>() &&
@@ -1740,14 +1838,6 @@ static bool checkVKBindingAppertainsTo(Sema &S, const AttributeList &Attr, const
   return true;
 }
 
-static bool checkSPIRVLangOpts(Sema &S, const AttributeList &Attr) {
-  if (S.LangOpts.SPIRV)
-    return true;
-
-  S.Diag(Attr.getLoc(), diag::warn_attribute_ignored) << Attr.getName();
-  return false;
-}
-
 static bool checkVKBuiltInAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
   if (!isa<FunctionDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
@@ -1758,9 +1848,9 @@ static bool checkVKBuiltInAppertainsTo(Sema &S, const AttributeList &Attr, const
 }
 
 static bool checkVKCapabilityExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedVariableOrFunction;
+      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
     return false;
   }
   return true;
@@ -1841,18 +1931,18 @@ static bool checkVKDecorateExtAppertainsTo(Sema &S, const AttributeList &Attr, c
 }
 
 static bool checkVKDecorateIdExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
+      << Attr.getName() << ExpectedFunctionVariableParamOrTypedef;
     return false;
   }
   return true;
 }
 
 static bool checkVKDecorateStringExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
+      << Attr.getName() << ExpectedFunctionVariableParamOrTypedef;
     return false;
   }
   return true;
@@ -1895,9 +1985,9 @@ static bool checkVKExtBuiltinOutputAppertainsTo(Sema &S, const AttributeList &At
 }
 
 static bool checkVKExtensionExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedVariableOrFunction;
+      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
     return false;
   }
   return true;
@@ -2346,6 +2436,7 @@ static const ParsedAttrInfo AttrInfoMap[AttributeList::UnknownAttribute + 1] = {
   { 0, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLForceCase
   { 0, 0, 0, 0, 0, 0, checkHLSLGloballyCoherentAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLGloballyCoherent
   { 0, 0, 0, 0, 0, 0, checkHLSLGroupSharedAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLGroupShared
+  { 0, 0, 0, 0, 0, 0, checkHLSLHitObjectAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLHitObject
   { 0, 0, 0, 0, 0, 0, checkHLSLInAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLIn
   { 0, 0, 0, 0, 0, 0, checkHLSLInOutAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLInOut
   { 0, 0, 0, 0, 0, 0, checkHLSLIndicesAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLIndices
@@ -2355,6 +2446,7 @@ static const ParsedAttrInfo AttrInfoMap[AttributeList::UnknownAttribute + 1] = {
   { 0, 0, 0, 0, 0, 0, checkHLSLLineAdjAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLLineAdj
   { 0, 0, 0, 0, 0, 0, checkHLSLLinearAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLLinear
   { 0, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLLoop
+  { 0, 0, 0, 0, 0, 0, checkHLSLMatrixAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLMatrix
   { 1, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLMaxRecords
   { 1, 0, 0, 0, 0, 0, checkHLSLMaxRecordsSharedWithAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLMaxRecordsSharedWith
   { 1, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLMaxTessFactor
@@ -2384,6 +2476,9 @@ static const ParsedAttrInfo AttrInfoMap[AttributeList::UnknownAttribute + 1] = {
   { 0, 0, 0, 0, 0, 0, checkHLSLPreciseAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLPrecise
   { 0, 0, 0, 0, 0, 0, checkHLSLPrimitivesAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLPrimitives
   { 0, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLRayPayload
+  { 0, 0, 0, 0, 0, 0, checkHLSLRayQueryObjectAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLRayQueryObject
+  { 0, 0, 0, 0, 0, 0, checkHLSLReorderCoherentAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLReorderCoherent
+  { 2, 0, 0, 0, 0, 0, checkHLSLResourceAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLResource
   { 1, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLRootSignature
   { 0, 0, 0, 0, 1, 0, checkHLSLRowMajorAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLRowMajor
   { 0, 0, 0, 0, 0, 0, checkHLSLSampleAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLSample
@@ -2391,12 +2486,16 @@ static const ParsedAttrInfo AttrInfoMap[AttributeList::UnknownAttribute + 1] = {
   { 1, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLShader
   { 0, 0, 0, 0, 0, 0, checkHLSLSharedAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLShared
   { 0, 0, 0, 0, 0, 0, checkHLSLSnormAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLSnorm
+  { 1, 0, 0, 0, 0, 0, checkHLSLStreamOutputAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLStreamOutput
+  { 2, 0, 0, 0, 0, 0, checkHLSLSubObjectAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLSubObject
+  { 1, 0, 0, 0, 0, 0, checkHLSLTessPatchAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLTessPatch
   { 0, 0, 0, 0, 0, 0, checkHLSLTriangleAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLTriangle
   { 0, 0, 0, 0, 0, 0, checkHLSLTriangleAdjAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLTriangleAdj
   { 0, 0, 0, 0, 0, 0, checkHLSLUnboundedSparseNodesAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLUnboundedSparseNodes
   { 0, 0, 0, 0, 0, 0, checkHLSLUniformAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLUniform
   { 0, 0, 0, 0, 0, 0, checkHLSLUnormAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLUnorm
   { 0, 1, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLUnroll
+  { 0, 0, 0, 0, 0, 0, checkHLSLVectorAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLVector
   { 0, 0, 0, 0, 0, 0, checkHLSLVerticesAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLVertices
   { 0, 0, 0, 0, 0, 0, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLWaveOpsIncludeHelperLanes
   { 0, 0, 0, 0, 0, 0, checkHLSLWaveSensitiveAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_HLSLWaveSensitive
@@ -2512,7 +2611,9 @@ static const ParsedAttrInfo AttrInfoMap[AttributeList::UnknownAttribute + 1] = {
   { 0, 0, 0, 0, 0, 1, checkUnusedAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_Unused
   { 0, 0, 0, 0, 0, 1, defaultAppertainsTo, defaultDiagnoseLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_Used
   { 1, 0, 0, 0, 0, 0, defaultAppertainsTo, checkMicrosoftExtBorlandLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_Uuid
+  { 0, 0, 0, 0, 0, 0, checkVKAliasedPointerAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKAliasedPointer
   { 1, 1, 0, 0, 0, 0, checkVKBindingAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKBinding
+  { 0, 0, 0, 0, 0, 0, defaultAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKBufferPointer
   { 1, 0, 0, 0, 0, 0, checkVKBuiltInAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKBuiltIn
   { 1, 0, 0, 0, 0, 0, checkVKCapabilityExtAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKCapabilityExt
   { 0, 0, 0, 0, 0, 0, checkVKCombinedImageSamplerAppertainsTo, checkSPIRVLangOpts, defaultTargetRequirements, defaultSpellingIndexToSemanticSpelling },  // AT_VKCombinedImageSampler

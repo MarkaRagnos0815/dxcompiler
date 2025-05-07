@@ -432,6 +432,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const HLSLGroupSharedAttr *A = cast<HLSLGroupSharedAttr>(At);
       return A->clone(C);
     }
+    case attr::HLSLHitObject: {
+      const HLSLHitObjectAttr *A = cast<HLSLHitObjectAttr>(At);
+      return A->clone(C);
+    }
     case attr::HLSLIn: {
       const HLSLInAttr *A = cast<HLSLInAttr>(At);
       return A->clone(C);
@@ -466,6 +470,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
     }
     case attr::HLSLLoop: {
       const HLSLLoopAttr *A = cast<HLSLLoopAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLMatrix: {
+      const HLSLMatrixAttr *A = cast<HLSLMatrixAttr>(At);
       return A->clone(C);
     }
     case attr::HLSLMaxRecords: {
@@ -584,6 +592,18 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const HLSLRayPayloadAttr *A = cast<HLSLRayPayloadAttr>(At);
       return A->clone(C);
     }
+    case attr::HLSLRayQueryObject: {
+      const HLSLRayQueryObjectAttr *A = cast<HLSLRayQueryObjectAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLReorderCoherent: {
+      const HLSLReorderCoherentAttr *A = cast<HLSLReorderCoherentAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLResource: {
+      const HLSLResourceAttr *A = cast<HLSLResourceAttr>(At);
+      return A->clone(C);
+    }
     case attr::HLSLRootSignature: {
       const HLSLRootSignatureAttr *A = cast<HLSLRootSignatureAttr>(At);
       return A->clone(C);
@@ -608,6 +628,18 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const HLSLSnormAttr *A = cast<HLSLSnormAttr>(At);
       return A->clone(C);
     }
+    case attr::HLSLStreamOutput: {
+      const HLSLStreamOutputAttr *A = cast<HLSLStreamOutputAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLSubObject: {
+      const HLSLSubObjectAttr *A = cast<HLSLSubObjectAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLTessPatch: {
+      const HLSLTessPatchAttr *A = cast<HLSLTessPatchAttr>(At);
+      return A->clone(C);
+    }
     case attr::HLSLTriangle: {
       const HLSLTriangleAttr *A = cast<HLSLTriangleAttr>(At);
       return A->clone(C);
@@ -630,6 +662,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
     }
     case attr::HLSLUnroll: {
       const HLSLUnrollAttr *A = cast<HLSLUnrollAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLVector: {
+      const HLSLVectorAttr *A = cast<HLSLVectorAttr>(At);
       return A->clone(C);
     }
     case attr::HLSLVertices: {
@@ -1114,8 +1150,16 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const UuidAttr *A = cast<UuidAttr>(At);
       return A->clone(C);
     }
+    case attr::VKAliasedPointer: {
+      const VKAliasedPointerAttr *A = cast<VKAliasedPointerAttr>(At);
+      return A->clone(C);
+    }
     case attr::VKBinding: {
       const VKBindingAttr *A = cast<VKBindingAttr>(At);
+      return A->clone(C);
+    }
+    case attr::VKBufferPointer: {
+      const VKBufferPointerAttr *A = cast<VKBufferPointerAttr>(At);
       return A->clone(C);
     }
     case attr::VKBuiltIn: {

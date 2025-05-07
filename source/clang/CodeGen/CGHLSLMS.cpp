@@ -43,7 +43,6 @@
 
 #include "dxc/DXIL/DxilCBuffer.h"
 #include "dxc/DXIL/DxilResourceProperties.h"
-#include "dxc/DXIL/DxilWaveMatrix.h"
 #include "dxc/DxilRootSignature/DxilRootSignature.h"
 #include "dxc/HLSL/DxilExportMap.h"
 #include "dxc/HLSL/DxilGenerationPass.h" // support pause/resume passes
@@ -214,7 +213,6 @@ private:
   unsigned AddTypeAnnotation(QualType Ty, DxilTypeSystem &dxilTypeSys,
                              unsigned &arrayEltSize);
   DxilResourceProperties BuildResourceProperty(QualType resTy);
-  DxilWaveMatrixProperties BuildWaveMatrixProperties(QualType resTy);
   void ConstructFieldAttributedAnnotation(DxilFieldAnnotation &fieldAnnotation,
                                           QualType fieldTy,
                                           bool bDefaultRowMajor);
@@ -302,7 +300,7 @@ public:
                                  clang::QualType QaulTy) override;
   void FinishAutoVar(CodeGenFunction &CGF, const VarDecl &D,
                      llvm::Value *V) override;
-  const clang::Expr *CheckReturnStmtGLCMismatch(
+  const clang::Expr *CheckReturnStmtCoherenceMismatch(
       CodeGenFunction &CGF, const Expr *RV, const clang::ReturnStmt &S,
       clang::QualType FnRetTy,
       const std::function<void(const VarDecl *, llvm::Value *)> &TmpArgMap)
@@ -764,31 +762,8 @@ DxilResourceProperties CGMSHLSLRuntime::BuildResourceProperty(QualType resTy) {
   return RP;
 }
 
-DxilWaveMatrixProperties
-CGMSHLSLRuntime::BuildWaveMatrixProperties(QualType qualTy) {
-  DxilWaveMatrixProperties props;
-  llvm::Type *Ty = CGM.getTypes().ConvertType(qualTy);
-  if (dxilutil::IsHLSLWaveMatrixType(Ty, &props.kind)) {
-    const CXXRecordDecl *CXXRD =
-        qualTy.getCanonicalType()->getAsCXXRecordDecl();
-    if (const ClassTemplateSpecializationDecl *templateSpecializationDecl =
-            dyn_cast<ClassTemplateSpecializationDecl>(CXXRD)) {
-      const clang::TemplateArgumentList &args =
-          templateSpecializationDecl->getTemplateInstantiationArgs();
-      DXASSERT(args[0].getAsType()->isBuiltinType(),
-               "otherwise, wrong kind of component type");
-      const BuiltinType *BTy = args[0].getAsType()->getAs<BuiltinType>();
-      props.compType = BuiltinTyToCompTy(BTy, false, false);
-      props.dimM = (unsigned)args[1].getAsIntegral().getExtValue();
-      props.dimN = (unsigned)args[2].getAsIntegral().getExtValue();
-    }
-  }
-  return props;
-}
-
 bool CGMSHLSLRuntime::AddValToPropertyMap(Value *V, QualType Ty) {
-  return objectProperties.AddResource(V, BuildResourceProperty(Ty)) ||
-         objectProperties.AddWaveMatrix(V, BuildWaveMatrixProperties(Ty));
+  return objectProperties.AddResource(V, BuildResourceProperty(Ty));
 }
 
 void CGMSHLSLRuntime::ConstructFieldAttributedAnnotation(
@@ -2525,9 +2500,11 @@ void CGMSHLSLRuntime::AddHLSLFunctionInfo(Function *F, const FunctionDecl *FD) {
 
     // Type annotation for this pointer.
     if (const CXXMethodDecl *MFD = dyn_cast<CXXMethodDecl>(FD)) {
-      const CXXRecordDecl *RD = MFD->getParent();
-      QualType Ty = CGM.getContext().getTypeDeclType(RD);
-      AddTypeAnnotation(Ty, dxilTypeSys, arrayEltSize);
+      if (!MFD->isStatic()) {
+        const CXXRecordDecl *RD = MFD->getParent();
+        QualType Ty = CGM.getContext().getTypeDeclType(RD);
+        AddTypeAnnotation(Ty, dxilTypeSys, arrayEltSize);
+      }
     }
 
     for (const ValueDecl *param : FD->params()) {
@@ -2826,16 +2803,20 @@ void CGMSHLSLRuntime::MarkPotentialResourceTemp(CodeGenFunction &CGF,
   AddValToPropertyMap(V, QualTy);
 }
 
-static bool isGLCMismatch(QualType Ty0, QualType Ty1, const Expr *SrcExp,
-                          clang::SourceLocation Loc, DiagnosticsEngine &Diags) {
-  if (HasHLSLGloballyCoherent(Ty0) == HasHLSLGloballyCoherent(Ty1))
-    return false;
+static std::pair<bool, bool> getCoherenceMismatch(QualType Ty0, QualType Ty1,
+                                                  const Expr *SrcExp) {
+  std::pair Mismatch{
+      HasHLSLGloballyCoherent(Ty0) != HasHLSLGloballyCoherent(Ty1),
+      HasHLSLReorderCoherent(Ty0) != HasHLSLReorderCoherent(Ty1)};
+  if (!Mismatch.first && !Mismatch.second)
+    return {false, false};
+
   if (const CastExpr *Cast = dyn_cast<CastExpr>(SrcExp)) {
     // Skip flat conversion which is for createHandleFromHeap.
     if (Cast->getCastKind() == CastKind::CK_FlatConversion)
-      return false;
+      return {false, false};
   }
-  return true;
+  return Mismatch;
 }
 
 void CGMSHLSLRuntime::FinishAutoVar(CodeGenFunction &CGF, const VarDecl &D,
@@ -2852,19 +2833,23 @@ void CGMSHLSLRuntime::FinishAutoVar(CodeGenFunction &CGF, const VarDecl &D,
   AddValToPropertyMap(V, D.getType());
 
   if (D.hasInit()) {
-    if (isGLCMismatch(D.getType(), D.getInit()->getType(), D.getInit(),
-                      D.getLocation(), CGM.getDiags())) {
-      objectProperties.updateGLC(V);
+    auto [glcMismatch, rdcMismatch] =
+        getCoherenceMismatch(D.getType(), D.getInit()->getType(), D.getInit());
+
+    if (glcMismatch || rdcMismatch) {
+      objectProperties.updateCoherence(V, glcMismatch, rdcMismatch);
     }
   }
 }
 
-const clang::Expr *CGMSHLSLRuntime::CheckReturnStmtGLCMismatch(
+const clang::Expr *CGMSHLSLRuntime::CheckReturnStmtCoherenceMismatch(
     CodeGenFunction &CGF, const Expr *RV, const clang::ReturnStmt &S,
     clang::QualType FnRetTy,
     const std::function<void(const VarDecl *, llvm::Value *)> &TmpArgMap) {
-  if (!isGLCMismatch(RV->getType(), FnRetTy, RV, S.getReturnLoc(),
-                     CGM.getDiags())) {
+  auto [glcMismatch, rdcMismatch] =
+      getCoherenceMismatch(RV->getType(), FnRetTy, RV);
+
+  if (!glcMismatch && !rdcMismatch) {
     return RV;
   }
   const FunctionDecl *FD = cast<FunctionDecl>(CGF.CurFuncDecl);
@@ -2936,10 +2921,11 @@ void CGMSHLSLRuntime::addResource(Decl *D) {
     if (VD->hasInit() && resClass != DXIL::ResourceClass::Invalid) {
 
       if (resClass == DXIL::ResourceClass::UAV) {
-        if (isGLCMismatch(VD->getType(), VD->getInit()->getType(),
-                          VD->getInit(), D->getLocation(), CGM.getDiags())) {
+        auto [glcMismatch, rdcMismatch] = getCoherenceMismatch(
+            VD->getType(), VD->getInit()->getType(), VD->getInit());
+        if (glcMismatch || rdcMismatch) {
           GlobalVariable *GV = cast<GlobalVariable>(CGM.GetAddrOfGlobalVar(VD));
-          objectProperties.updateGLC(GV);
+          objectProperties.updateCoherence(GV, glcMismatch, rdcMismatch);
         }
       }
       return;
@@ -3400,48 +3386,6 @@ void CGMSHLSLRuntime::CreateSubobject(
   }
 }
 
-static void CollectScalarTypes(std::vector<QualType> &ScalarTys, QualType Ty) {
-  if (Ty->isRecordType()) {
-    if (hlsl::IsHLSLMatType(Ty)) {
-      QualType EltTy = hlsl::GetHLSLMatElementType(Ty);
-      unsigned row = 0;
-      unsigned col = 0;
-      hlsl::GetRowsAndCols(Ty, row, col);
-      unsigned size = col * row;
-      for (unsigned i = 0; i < size; i++) {
-        CollectScalarTypes(ScalarTys, EltTy);
-      }
-    } else if (hlsl::IsHLSLVecType(Ty)) {
-      QualType EltTy = hlsl::GetHLSLVecElementType(Ty);
-      unsigned row = 0;
-      unsigned col = 0;
-      hlsl::GetRowsAndColsForAny(Ty, row, col);
-      unsigned size = col;
-      for (unsigned i = 0; i < size; i++) {
-        CollectScalarTypes(ScalarTys, EltTy);
-      }
-    } else {
-      const RecordType *RT = Ty->getAs<RecordType>();
-      RecordDecl *RD = RT->getDecl();
-      for (FieldDecl *field : RD->fields())
-        CollectScalarTypes(ScalarTys, field->getType());
-    }
-  } else if (Ty->isArrayType()) {
-    const clang::ArrayType *AT = Ty->getAsArrayTypeUnsafe();
-    QualType EltTy = AT->getElementType();
-    // Set it to 5 for unsized array.
-    unsigned size = 5;
-    if (AT->isConstantArrayType()) {
-      size = cast<ConstantArrayType>(AT)->getSize().getLimitedValue();
-    }
-    for (unsigned i = 0; i < size; i++) {
-      CollectScalarTypes(ScalarTys, EltTy);
-    }
-  } else {
-    ScalarTys.emplace_back(Ty);
-  }
-}
-
 bool CGMSHLSLRuntime::SetUAVSRV(SourceLocation loc,
                                 hlsl::DxilResourceBase::Class resClass,
                                 DxilResource *hlslRes, QualType QualTy) {
@@ -3468,66 +3412,13 @@ bool CGMSHLSLRuntime::SetUAVSRV(SourceLocation loc,
     hlslRes->SetSampleCount(sampleCount);
   }
 
-  if (hlsl::DxilResource::IsAnyTexture(kind)) {
-    const ClassTemplateSpecializationDecl *templateDecl =
-        cast<ClassTemplateSpecializationDecl>(RD);
-    const clang::TemplateArgument &texelTyArg =
-        templateDecl->getTemplateArgs()[0];
-    llvm::Type *texelTy = CGM.getTypes().ConvertType(texelTyArg.getAsType());
-    if (!texelTy->isFloatingPointTy() && !texelTy->isIntegerTy() &&
-        !hlsl::IsHLSLVecType(texelTyArg.getAsType())) {
-      DiagnosticsEngine &Diags = CGM.getDiags();
-      unsigned DiagID = Diags.getCustomDiagID(
-          DiagnosticsEngine::Error,
-          "texture resource texel type must be scalar or vector");
-      Diags.Report(loc, DiagID);
-      return false;
-    }
-  }
-
   QualType resultTy = hlsl::GetHLSLResourceResultType(QualTy);
   if (kind != hlsl::DxilResource::Kind::StructuredBuffer &&
       !resultTy.isNull()) {
     QualType Ty = resultTy;
     QualType EltTy = Ty;
-    if (hlsl::IsHLSLVecType(Ty)) {
+    if (hlsl::IsHLSLVecType(Ty))
       EltTy = hlsl::GetHLSLVecElementType(Ty);
-    } else if (hlsl::IsHLSLMatType(Ty)) {
-      EltTy = hlsl::GetHLSLMatElementType(Ty);
-    } else if (hlsl::IsHLSLAggregateType(resultTy)) {
-      // Struct or array in a none-struct resource.
-      std::vector<QualType> ScalarTys;
-      CollectScalarTypes(ScalarTys, resultTy);
-      unsigned size = ScalarTys.size();
-      if (size == 0) {
-        DiagnosticsEngine &Diags = CGM.getDiags();
-        unsigned DiagID = Diags.getCustomDiagID(
-            DiagnosticsEngine::Error,
-            "object's templated type must have at least one element");
-        Diags.Report(loc, DiagID);
-        return false;
-      }
-      if (size > 4) {
-        DiagnosticsEngine &Diags = CGM.getDiags();
-        unsigned DiagID = Diags.getCustomDiagID(
-            DiagnosticsEngine::Error, "elements of typed buffers and textures "
-                                      "must fit in four 32-bit quantities");
-        Diags.Report(loc, DiagID);
-        return false;
-      }
-
-      EltTy = ScalarTys[0];
-      for (QualType ScalarTy : ScalarTys) {
-        if (ScalarTy != EltTy) {
-          DiagnosticsEngine &Diags = CGM.getDiags();
-          unsigned DiagID = Diags.getCustomDiagID(
-              DiagnosticsEngine::Error,
-              "all template type components must have the same type");
-          Diags.Report(loc, DiagID);
-          return false;
-        }
-      }
-    }
 
     bool bSNorm = false;
     bool bHasNormAttribute = hlsl::HasHLSLUNormSNorm(Ty, &bSNorm);
@@ -3535,11 +3426,20 @@ bool CGMSHLSLRuntime::SetUAVSRV(SourceLocation loc,
     if (const BuiltinType *BTy = EltTy->getAs<BuiltinType>()) {
       CompType::Kind kind = BuiltinTyToCompTy(BTy, bHasNormAttribute && bSNorm,
                                               bHasNormAttribute && !bSNorm);
-      // 64bits types are implemented with u32.
-      if (kind == CompType::Kind::U64 || kind == CompType::Kind::I64 ||
-          kind == CompType::Kind::SNormF64 ||
-          kind == CompType::Kind::UNormF64 || kind == CompType::Kind::F64) {
+      // Boolean, 64-bit, and packed types are implemented with u32.
+      switch (kind) {
+      case CompType::Kind::I1:
+      case CompType::Kind::U64:
+      case CompType::Kind::I64:
+      case CompType::Kind::F64:
+      case CompType::Kind::SNormF64:
+      case CompType::Kind::UNormF64:
+      case CompType::Kind::PackedS8x32:
+      case CompType::Kind::PackedU8x32:
         kind = CompType::Kind::U32;
+        break;
+      default:
+        break;
       }
       hlslRes->SetCompType(kind);
     } else {
@@ -3572,8 +3472,11 @@ bool CGMSHLSLRuntime::SetUAVSRV(SourceLocation loc,
       }
     }
   }
+  // 'globallycoherent' implies 'reordercoherent'
   if (HasHLSLGloballyCoherent(QualTy)) {
     hlslRes->SetGloballyCoherent(true);
+  } else if (HasHLSLReorderCoherent(QualTy)) {
+    hlslRes->SetReorderCoherent(true);
   }
   if (resClass == hlsl::DxilResourceBase::Class::SRV) {
     hlslRes->SetRW(false);
@@ -3606,6 +3509,8 @@ uint32_t CGMSHLSLRuntime::AddUAVSRV(VarDecl *decl,
   if (decl->hasAttr<HLSLGloballyCoherentAttr>()) {
     hlslRes->SetGloballyCoherent(true);
   }
+  if (decl->hasAttr<HLSLReorderCoherentAttr>())
+    hlslRes->SetReorderCoherent(true);
 
   if (!SetUAVSRV(decl->getLocation(), resClass, hlslRes.get(), VarTy))
     return 0;
@@ -6249,8 +6154,9 @@ void CGMSHLSLRuntime::EmitHLSLOutParamConversionInit(
     bool isObject = dxilutil::IsHLSLObjectType(CGF.ConvertTypeForMem(ParamTy));
     bool bAnnotResource = false;
     if (isObject) {
-      if (isGLCMismatch(Param->getType(), Arg->getType(), Arg,
-                        Arg->getExprLoc(), CGM.getDiags())) {
+      auto [glcMismatch, rdcMismatch] =
+          getCoherenceMismatch(Param->getType(), Arg->getType(), Arg);
+      if (glcMismatch || rdcMismatch) {
         // NOTE: if function is noinline, resource parameter is not allowed.
         // Here assume function will be always inlined.
         // This can only take care resource as parameter. When parameter is

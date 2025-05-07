@@ -229,18 +229,18 @@ static const char *OpCodeSignatures[] = {
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1)",  // TextureGatherRaw
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,lod)",  // SampleCmpLevel
   "(srv,coord0,coord1,coord2,value0,value1,value2,value3,mask,sampleIdx)",  // TextureStoreSample
-  "(waveMatrixPtr,waveMatProps)",  // WaveMatrix_Annotate
-  "(waveMatProps)",  // WaveMatrix_Depth
-  "(waveMatrixPtr,value)",  // WaveMatrix_Fill
-  "(waveMatrixPtr,rawBuf,offsetInBytes,strideInBytes,alignmentInBytes,colMajor)",  // WaveMatrix_LoadRawBuf
-  "(waveMatrixPtr,groupsharedPtr,startArrayIndex,strideInElements,colMajor)",  // WaveMatrix_LoadGroupShared
-  "(waveMatrixPtr,rawBuf,offsetInBytes,strideInBytes,alignmentInBytes,colMajor)",  // WaveMatrix_StoreRawBuf
-  "(waveMatrixPtr,groupsharedPtr,startArrayIndex,strideInElements,colMajor)",  // WaveMatrix_StoreGroupShared
-  "(waveMatrixAccumulator,waveMatrixLeft,waveMatrixRight)",  // WaveMatrix_Multiply
-  "(waveMatrixAccumulator,waveMatrixLeft,waveMatrixRight)",  // WaveMatrix_MultiplyAccumulate
-  "(waveMatrixPtr,op,value)",  // WaveMatrix_ScalarOp
-  "(waveMatrixFragment,waveMatrixInput)",  // WaveMatrix_SumAccumulate
-  "(waveMatrixAccumulator,waveMatrixAccumulatorOrFragment)",  // WaveMatrix_Add
+  "()",  // Reserved0
+  "()",  // Reserved1
+  "()",  // Reserved2
+  "()",  // Reserved3
+  "()",  // Reserved4
+  "()",  // Reserved5
+  "()",  // Reserved6
+  "()",  // Reserved7
+  "()",  // Reserved8
+  "()",  // Reserved9
+  "()",  // Reserved10
+  "()",  // Reserved11
   "(output,numRecords,perThread)",  // AllocateNodeOutputRecords
   "(recordhandle,arrayIndex)",  // GetNodeRecordPtr
   "(output,count,perThread)",  // IncrementOutputCount
@@ -260,6 +260,57 @@ static const char *OpCodeSignatures[] = {
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,ddx0,ddx1,ddx2,ddy0,ddy1,ddy2,clamp)",  // SampleCmpGrad
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,bias,clamp)",  // SampleCmpBias
   "()",  // StartVertexLocation
-  "()"  // StartInstanceLocation
+  "()",  // StartInstanceLocation
+  "(constRayFlags,constRayQueryFlags)",  // AllocateRayQuery2
+  "()",  // ReservedA0
+  "()",  // ReservedA1
+  "()",  // ReservedA2
+  "(accelerationStructure,rayFlags,instanceInclusionMask,rayContributionToHitGroupIndex,multiplierForGeometryContributionToHitGroupIndex,missShaderIndex,Origin_X,Origin_Y,Origin_Z,TMin,Direction_X,Direction_Y,Direction_Z,TMax,payload)",  // HitObject_TraceRay
+  "(rayQueryHandle)",  // HitObject_FromRayQuery
+  "(rayQueryHandle,HitKind,CommittedAttribs)",  // HitObject_FromRayQueryWithAttrs
+  "(RayFlags,MissShaderIndex,Origin_X,Origin_Y,Origin_Z,TMin,Direction_X,Direction_Y,Direction_Z,TMax)",  // HitObject_MakeMiss
+  "()",  // HitObject_MakeNop
+  "(hitObject,payload)",  // HitObject_Invoke
+  "(hitObject,coherenceHint,numCoherenceHintBitsFromLSB)",  // MaybeReorderThread
+  "(hitObject)",  // HitObject_IsMiss
+  "(hitObject)",  // HitObject_IsHit
+  "(hitObject)",  // HitObject_IsNop
+  "(hitObject)",  // HitObject_RayFlags
+  "(hitObject)",  // HitObject_RayTMin
+  "(hitObject)",  // HitObject_RayTCurrent
+  "(hitObject,component)",  // HitObject_WorldRayOrigin
+  "(hitObject,component)",  // HitObject_WorldRayDirection
+  "(hitObject,component)",  // HitObject_ObjectRayOrigin
+  "(hitObject,component)",  // HitObject_ObjectRayDirection
+  "(hitObject,row,col)",  // HitObject_ObjectToWorld3x4
+  "(hitObject,row,col)",  // HitObject_WorldToObject3x4
+  "(hitObject)",  // HitObject_GeometryIndex
+  "(hitObject)",  // HitObject_InstanceIndex
+  "(hitObject)",  // HitObject_InstanceID
+  "(hitObject)",  // HitObject_PrimitiveIndex
+  "(hitObject)",  // HitObject_HitKind
+  "(hitObject)",  // HitObject_ShaderTableIndex
+  "(hitObject,shaderTableIndex)",  // HitObject_SetShaderTableIndex
+  "(hitObject,offset)",  // HitObject_LoadLocalRootTableConstant
+  "(hitObject,attributes)",  // HitObject_Attributes
+  "()",  // ReservedB28
+  "()",  // ReservedB29
+  "()",  // ReservedB30
+  "()",  // ReservedC0
+  "()",  // ReservedC1
+  "()",  // ReservedC2
+  "()",  // ReservedC3
+  "()",  // ReservedC4
+  "()",  // ReservedC5
+  "()",  // ReservedC6
+  "()",  // ReservedC7
+  "()",  // ReservedC8
+  "()",  // ReservedC9
+  "(buf,index,elementOffset,alignment)",  // RawBufferVectorLoad
+  "(uav,index,elementOffset,value0,alignment)",  // RawBufferVectorStore
+  "(inputVector,isInputUnsigned,inputInterpretation,matrixBuffer,matrixOffset,matrixIntepretation,matrixM,matrixK,matrixLayout,matrixTranspose,matrixStride,isOutputUnsigned)",  // MatVecMul
+  "(inputVector,isInputUnsigned,inputInterpretation,matrixBuffer,matrixOffset,matrixIntepretation,matrixM,matrixK,matrixLayout,matrixTranspose,matrixStride,biasBuffer,biasOffset,biasIntepretation,isOutputUnsigned)",  // MatVecMulAdd
+  "(inputVector1,inputVector2,matrixBuffer,matrixOffset,matrixIntepretation,matrixLayout,matrixStride)",  // OuterProductAccumulate
+  "(inputVector,arrayBuffer,arrayOffset)"  // VectorAccumulate
 };
 

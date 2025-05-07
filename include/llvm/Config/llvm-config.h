@@ -97,7 +97,7 @@
 #define LLVM_VERSION_PATCH 0
 
 /* LLVM version string */
-#define LLVM_VERSION_STRING "3.7-v1.7.2308-6-g66faf0d7b"
+#define LLVM_VERSION_STRING "3.7-v1.8.2405-326-g11e28952e-dirty"
 
 /* Define if we link Polly to the tools */
 /* #undef LINK_POLLY_INTO_TOOLS */

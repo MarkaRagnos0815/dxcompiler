@@ -2811,6 +2811,21 @@ const char *HLSLGroupSharedAttr::getSpelling() const {
   }
 }
 
+HLSLHitObjectAttr *HLSLHitObjectAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLHitObjectAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLHitObjectAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLHitObjectAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
 HLSLInAttr *HLSLInAttr::clone(ASTContext &C) const {
   auto *A = new (C) HLSLInAttr(getLocation(), C, getSpellingListIndex());
   A->Inherited = Inherited;
@@ -3079,6 +3094,21 @@ const char *HLSLLoopAttr::getSpelling() const {
   case 0:
     return "loop";
   }
+}
+
+HLSLMatrixAttr *HLSLMatrixAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLMatrixAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLMatrixAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLMatrixAttr::getSpelling() const {
+  return "(No spelling)";
 }
 
 HLSLMaxRecordsAttr *HLSLMaxRecordsAttr::clone(ASTContext &C) const {
@@ -3936,6 +3966,66 @@ const char *HLSLRayPayloadAttr::getSpelling() const {
   }
 }
 
+HLSLRayQueryObjectAttr *HLSLRayQueryObjectAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLRayQueryObjectAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLRayQueryObjectAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLRayQueryObjectAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
+HLSLReorderCoherentAttr *HLSLReorderCoherentAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLReorderCoherentAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLReorderCoherentAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[reordercoherent]]";
+    break;
+  }
+}
+}
+
+const char *HLSLReorderCoherentAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "reordercoherent";
+  }
+}
+
+HLSLResourceAttr *HLSLResourceAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLResourceAttr(getLocation(), C, resKindUint, resClassUint, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLResourceAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLResourceAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
 HLSLRootSignatureAttr *HLSLRootSignatureAttr::clone(ASTContext &C) const {
   auto *A = new (C) HLSLRootSignatureAttr(getLocation(), C, getSignatureName(), getSpellingListIndex());
   A->Inherited = Inherited;
@@ -4099,6 +4189,51 @@ const char *HLSLSnormAttr::getSpelling() const {
   case 0:
     return "snorm";
   }
+}
+
+HLSLStreamOutputAttr *HLSLStreamOutputAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLStreamOutputAttr(getLocation(), C, primVertices, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLStreamOutputAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLStreamOutputAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
+HLSLSubObjectAttr *HLSLSubObjectAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLSubObjectAttr(getLocation(), C, subObjKindUint, hitGroupType, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLSubObjectAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLSubObjectAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
+HLSLTessPatchAttr *HLSLTessPatchAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLTessPatchAttr(getLocation(), C, isInput, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLTessPatchAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLTessPatchAttr::getSpelling() const {
+  return "(No spelling)";
 }
 
 HLSLTriangleAttr *HLSLTriangleAttr::clone(ASTContext &C) const {
@@ -4279,6 +4414,21 @@ const char *HLSLUnrollAttr::getSpelling() const {
   case 0:
     return "unroll";
   }
+}
+
+HLSLVectorAttr *HLSLVectorAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLVectorAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLVectorAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLVectorAttr::getSpelling() const {
+  return "(No spelling)";
 }
 
 HLSLVerticesAttr *HLSLVerticesAttr::clone(ASTContext &C) const {
@@ -7908,6 +8058,36 @@ const char *UuidAttr::getSpelling() const {
   }
 }
 
+VKAliasedPointerAttr *VKAliasedPointerAttr::clone(ASTContext &C) const {
+  auto *A = new (C) VKAliasedPointerAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void VKAliasedPointerAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[vk::aliased_pointer]]";
+    break;
+  }
+}
+}
+
+const char *VKAliasedPointerAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "aliased_pointer";
+  }
+}
+
 VKBindingAttr *VKBindingAttr::clone(ASTContext &C) const {
   auto *A = new (C) VKBindingAttr(getLocation(), C, binding, set, getSpellingListIndex());
   A->Inherited = Inherited;
@@ -7935,6 +8115,36 @@ const char *VKBindingAttr::getSpelling() const {
     return "(No spelling)";
   case 0:
     return "binding";
+  }
+}
+
+VKBufferPointerAttr *VKBufferPointerAttr::clone(ASTContext &C) const {
+  auto *A = new (C) VKBufferPointerAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void VKBufferPointerAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[hlsl_vk_buffer_pointer]]";
+    break;
+  }
+}
+}
+
+const char *VKBufferPointerAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "hlsl_vk_buffer_pointer";
   }
 }
 
@@ -9517,6 +9727,8 @@ const char *Attr::getSpelling() const {
     return cast<HLSLGloballyCoherentAttr>(this)->getSpelling();
   case attr::HLSLGroupShared:
     return cast<HLSLGroupSharedAttr>(this)->getSpelling();
+  case attr::HLSLHitObject:
+    return cast<HLSLHitObjectAttr>(this)->getSpelling();
   case attr::HLSLIn:
     return cast<HLSLInAttr>(this)->getSpelling();
   case attr::HLSLInOut:
@@ -9535,6 +9747,8 @@ const char *Attr::getSpelling() const {
     return cast<HLSLLinearAttr>(this)->getSpelling();
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->getSpelling();
+  case attr::HLSLMatrix:
+    return cast<HLSLMatrixAttr>(this)->getSpelling();
   case attr::HLSLMaxRecords:
     return cast<HLSLMaxRecordsAttr>(this)->getSpelling();
   case attr::HLSLMaxRecordsSharedWith:
@@ -9593,6 +9807,12 @@ const char *Attr::getSpelling() const {
     return cast<HLSLPrimitivesAttr>(this)->getSpelling();
   case attr::HLSLRayPayload:
     return cast<HLSLRayPayloadAttr>(this)->getSpelling();
+  case attr::HLSLRayQueryObject:
+    return cast<HLSLRayQueryObjectAttr>(this)->getSpelling();
+  case attr::HLSLReorderCoherent:
+    return cast<HLSLReorderCoherentAttr>(this)->getSpelling();
+  case attr::HLSLResource:
+    return cast<HLSLResourceAttr>(this)->getSpelling();
   case attr::HLSLRootSignature:
     return cast<HLSLRootSignatureAttr>(this)->getSpelling();
   case attr::HLSLSample:
@@ -9605,6 +9825,12 @@ const char *Attr::getSpelling() const {
     return cast<HLSLSharedAttr>(this)->getSpelling();
   case attr::HLSLSnorm:
     return cast<HLSLSnormAttr>(this)->getSpelling();
+  case attr::HLSLStreamOutput:
+    return cast<HLSLStreamOutputAttr>(this)->getSpelling();
+  case attr::HLSLSubObject:
+    return cast<HLSLSubObjectAttr>(this)->getSpelling();
+  case attr::HLSLTessPatch:
+    return cast<HLSLTessPatchAttr>(this)->getSpelling();
   case attr::HLSLTriangle:
     return cast<HLSLTriangleAttr>(this)->getSpelling();
   case attr::HLSLTriangleAdj:
@@ -9617,6 +9843,8 @@ const char *Attr::getSpelling() const {
     return cast<HLSLUnormAttr>(this)->getSpelling();
   case attr::HLSLUnroll:
     return cast<HLSLUnrollAttr>(this)->getSpelling();
+  case attr::HLSLVector:
+    return cast<HLSLVectorAttr>(this)->getSpelling();
   case attr::HLSLVertices:
     return cast<HLSLVerticesAttr>(this)->getSpelling();
   case attr::HLSLWaveOpsIncludeHelperLanes:
@@ -9819,8 +10047,12 @@ const char *Attr::getSpelling() const {
     return cast<UsedAttr>(this)->getSpelling();
   case attr::Uuid:
     return cast<UuidAttr>(this)->getSpelling();
+  case attr::VKAliasedPointer:
+    return cast<VKAliasedPointerAttr>(this)->getSpelling();
   case attr::VKBinding:
     return cast<VKBindingAttr>(this)->getSpelling();
+  case attr::VKBufferPointer:
+    return cast<VKBufferPointerAttr>(this)->getSpelling();
   case attr::VKBuiltIn:
     return cast<VKBuiltInAttr>(this)->getSpelling();
   case attr::VKCapabilityExt:
@@ -10083,6 +10315,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLGloballyCoherentAttr>(this)->clone(C);
   case attr::HLSLGroupShared:
     return cast<HLSLGroupSharedAttr>(this)->clone(C);
+  case attr::HLSLHitObject:
+    return cast<HLSLHitObjectAttr>(this)->clone(C);
   case attr::HLSLIn:
     return cast<HLSLInAttr>(this)->clone(C);
   case attr::HLSLInOut:
@@ -10101,6 +10335,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLLinearAttr>(this)->clone(C);
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->clone(C);
+  case attr::HLSLMatrix:
+    return cast<HLSLMatrixAttr>(this)->clone(C);
   case attr::HLSLMaxRecords:
     return cast<HLSLMaxRecordsAttr>(this)->clone(C);
   case attr::HLSLMaxRecordsSharedWith:
@@ -10159,6 +10395,12 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLPrimitivesAttr>(this)->clone(C);
   case attr::HLSLRayPayload:
     return cast<HLSLRayPayloadAttr>(this)->clone(C);
+  case attr::HLSLRayQueryObject:
+    return cast<HLSLRayQueryObjectAttr>(this)->clone(C);
+  case attr::HLSLReorderCoherent:
+    return cast<HLSLReorderCoherentAttr>(this)->clone(C);
+  case attr::HLSLResource:
+    return cast<HLSLResourceAttr>(this)->clone(C);
   case attr::HLSLRootSignature:
     return cast<HLSLRootSignatureAttr>(this)->clone(C);
   case attr::HLSLSample:
@@ -10171,6 +10413,12 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLSharedAttr>(this)->clone(C);
   case attr::HLSLSnorm:
     return cast<HLSLSnormAttr>(this)->clone(C);
+  case attr::HLSLStreamOutput:
+    return cast<HLSLStreamOutputAttr>(this)->clone(C);
+  case attr::HLSLSubObject:
+    return cast<HLSLSubObjectAttr>(this)->clone(C);
+  case attr::HLSLTessPatch:
+    return cast<HLSLTessPatchAttr>(this)->clone(C);
   case attr::HLSLTriangle:
     return cast<HLSLTriangleAttr>(this)->clone(C);
   case attr::HLSLTriangleAdj:
@@ -10183,6 +10431,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLUnormAttr>(this)->clone(C);
   case attr::HLSLUnroll:
     return cast<HLSLUnrollAttr>(this)->clone(C);
+  case attr::HLSLVector:
+    return cast<HLSLVectorAttr>(this)->clone(C);
   case attr::HLSLVertices:
     return cast<HLSLVerticesAttr>(this)->clone(C);
   case attr::HLSLWaveOpsIncludeHelperLanes:
@@ -10385,8 +10635,12 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<UsedAttr>(this)->clone(C);
   case attr::Uuid:
     return cast<UuidAttr>(this)->clone(C);
+  case attr::VKAliasedPointer:
+    return cast<VKAliasedPointerAttr>(this)->clone(C);
   case attr::VKBinding:
     return cast<VKBindingAttr>(this)->clone(C);
+  case attr::VKBufferPointer:
+    return cast<VKBufferPointerAttr>(this)->clone(C);
   case attr::VKBuiltIn:
     return cast<VKBuiltInAttr>(this)->clone(C);
   case attr::VKCapabilityExt:
@@ -10649,6 +10903,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLGloballyCoherentAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLGroupShared:
     return cast<HLSLGroupSharedAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLHitObject:
+    return cast<HLSLHitObjectAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLIn:
     return cast<HLSLInAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLInOut:
@@ -10667,6 +10923,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLLinearAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLMatrix:
+    return cast<HLSLMatrixAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLMaxRecords:
     return cast<HLSLMaxRecordsAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLMaxRecordsSharedWith:
@@ -10725,6 +10983,12 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLPrimitivesAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLRayPayload:
     return cast<HLSLRayPayloadAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLRayQueryObject:
+    return cast<HLSLRayQueryObjectAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLReorderCoherent:
+    return cast<HLSLReorderCoherentAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLResource:
+    return cast<HLSLResourceAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLRootSignature:
     return cast<HLSLRootSignatureAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLSample:
@@ -10737,6 +11001,12 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLSharedAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLSnorm:
     return cast<HLSLSnormAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLStreamOutput:
+    return cast<HLSLStreamOutputAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLSubObject:
+    return cast<HLSLSubObjectAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLTessPatch:
+    return cast<HLSLTessPatchAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLTriangle:
     return cast<HLSLTriangleAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLTriangleAdj:
@@ -10749,6 +11019,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLUnormAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLUnroll:
     return cast<HLSLUnrollAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLVector:
+    return cast<HLSLVectorAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLVertices:
     return cast<HLSLVerticesAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLWaveOpsIncludeHelperLanes:
@@ -10951,8 +11223,12 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<UsedAttr>(this)->printPretty(OS, Policy);
   case attr::Uuid:
     return cast<UuidAttr>(this)->printPretty(OS, Policy);
+  case attr::VKAliasedPointer:
+    return cast<VKAliasedPointerAttr>(this)->printPretty(OS, Policy);
   case attr::VKBinding:
     return cast<VKBindingAttr>(this)->printPretty(OS, Policy);
+  case attr::VKBufferPointer:
+    return cast<VKBufferPointerAttr>(this)->printPretty(OS, Policy);
   case attr::VKBuiltIn:
     return cast<VKBuiltInAttr>(this)->printPretty(OS, Policy);
   case attr::VKCapabilityExt:

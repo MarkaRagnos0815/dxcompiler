@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Google Inc.
+// Copyright (c) 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "source/enum_string_mapping.h"
+#ifndef SOURCE_TO_STRING_H_
+#define SOURCE_TO_STRING_H_
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
+#include <cstdint>
 #include <string>
-#include <unordered_map>
-
-#include "source/extensions.h"
 
 namespace spvtools {
 
-#include "enum_string_mapping.inc"
+// Returns the decimal representation of a number as a string,
+// without using the locale.
+std::string to_string(uint32_t n);
 
 }  // namespace spvtools
+
+#endif  // SOURCE_TO_STRING_H_

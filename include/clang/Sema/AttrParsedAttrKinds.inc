@@ -1949,13 +1949,24 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 17:	 // 5 strings to match.
+  case 17:	 // 6 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 1 string to match.
-      if (memcmp(Name.data()+1, ":nointerpolation", 16))
+    case ':':	 // 2 strings to match.
+      if (Name[1] != ':')
         break;
-      return AttributeList::AT_HLSLNoInterpolation;	 // "::nointerpolation"
+      switch (Name[2]) {
+      default: break;
+      case 'n':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "ointerpolation", 14))
+          break;
+        return AttributeList::AT_HLSLNoInterpolation;	 // "::nointerpolation"
+      case 'r':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "eordercoherent", 14))
+          break;
+        return AttributeList::AT_HLSLReorderCoherent;	 // "::reordercoherent"
+      }
+      break;
     case 'c':	 // 1 string to match.
       if (memcmp(Name.data()+1, "lang::capability", 16))
         break;
@@ -2068,7 +2079,7 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       return AttributeList::AT_VKCapabilityExt;	 // "vk::ext_capability"
     }
     break;
-  case 19:	 // 8 strings to match.
+  case 19:	 // 9 strings to match.
     switch (Name[0]) {
     default: break;
     case ':':	 // 2 strings to match.
@@ -2101,11 +2112,15 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
         return AttributeList::AT_NoSplitStack;	 // "gnu::no_split_stack"
       }
       break;
-    case 'v':	 // 4 strings to match.
+    case 'v':	 // 5 strings to match.
       if (memcmp(Name.data()+1, "k::", 3))
         break;
       switch (Name[4]) {
       default: break;
+      case 'a':	 // 1 string to match.
+        if (memcmp(Name.data()+5, "liased_pointer", 14))
+          break;
+        return AttributeList::AT_VKAliasedPointer;	 // "vk::aliased_pointer"
       case 'c':	 // 1 string to match.
         if (memcmp(Name.data()+5, "ounter_binding", 14))
           break;
@@ -2293,9 +2308,13 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 24:	 // 5 strings to match.
+  case 24:	 // 6 strings to match.
     switch (Name[0]) {
     default: break;
+    case ':':	 // 1 string to match.
+      if (memcmp(Name.data()+1, ":hlsl_vk_buffer_pointer", 23))
+        break;
+      return AttributeList::AT_VKBufferPointer;	 // "::hlsl_vk_buffer_pointer"
     case 'c':	 // 2 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6))
         break;

@@ -640,6 +640,13 @@ Record.push_back(SA->getDefaultState());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLHitObject: {
+    const HLSLHitObjectAttr *SA = cast<HLSLHitObjectAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
   case attr::HLSLIn: {
     const HLSLInAttr *SA = cast<HLSLInAttr>(A);
     Record.push_back(SA->isInherited());
@@ -701,6 +708,13 @@ Record.push_back(SA->getDefaultState());
     break;
   }
   case attr::HLSLLoop: {
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::HLSLMatrix: {
+    const HLSLMatrixAttr *SA = cast<HLSLMatrixAttr>(A);
+    Record.push_back(SA->isInherited());
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
     break;
@@ -934,6 +948,29 @@ Record.push_back(SA->getType());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLRayQueryObject: {
+    const HLSLRayQueryObjectAttr *SA = cast<HLSLRayQueryObjectAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::HLSLReorderCoherent: {
+    const HLSLReorderCoherentAttr *SA = cast<HLSLReorderCoherentAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::HLSLResource: {
+    const HLSLResourceAttr *SA = cast<HLSLResourceAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getResKindUint());
+    Record.push_back(SA->getResClassUint());
+    break;
+  }
   case attr::HLSLRootSignature: {
     const HLSLRootSignatureAttr *SA = cast<HLSLRootSignatureAttr>(A);
     Record.push_back(SA->isInherited());
@@ -979,6 +1016,31 @@ Record.push_back(SA->getType());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLStreamOutput: {
+    const HLSLStreamOutputAttr *SA = cast<HLSLStreamOutputAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getPrimVertices());
+    break;
+  }
+  case attr::HLSLSubObject: {
+    const HLSLSubObjectAttr *SA = cast<HLSLSubObjectAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getSubObjKindUint());
+    Record.push_back(SA->getHitGroupType());
+    break;
+  }
+  case attr::HLSLTessPatch: {
+    const HLSLTessPatchAttr *SA = cast<HLSLTessPatchAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getIsInput());
+    break;
+  }
   case attr::HLSLTriangle: {
     const HLSLTriangleAttr *SA = cast<HLSLTriangleAttr>(A);
     Record.push_back(SA->isInherited());
@@ -1019,6 +1081,13 @@ Record.push_back(SA->getType());
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
     Record.push_back(SA->getCount());
+    break;
+  }
+  case attr::HLSLVector: {
+    const HLSLVectorAttr *SA = cast<HLSLVectorAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
     break;
   }
   case attr::HLSLVertices: {
@@ -1784,6 +1853,13 @@ Record.push_back(SA->getVisibility());
     AddString(SA->getGuid(), Record);
     break;
   }
+  case attr::VKAliasedPointer: {
+    const VKAliasedPointerAttr *SA = cast<VKAliasedPointerAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
   case attr::VKBinding: {
     const VKBindingAttr *SA = cast<VKBindingAttr>(A);
     Record.push_back(SA->isInherited());
@@ -1791,6 +1867,13 @@ Record.push_back(SA->getVisibility());
     Record.push_back(A->getSpellingListIndex());
     Record.push_back(SA->getBinding());
     Record.push_back(SA->getSet());
+    break;
+  }
+  case attr::VKBufferPointer: {
+    const VKBufferPointerAttr *SA = cast<VKBufferPointerAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
     break;
   }
   case attr::VKBuiltIn: {

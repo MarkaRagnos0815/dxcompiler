@@ -3111,6 +3111,31 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLGroupShared; }
 };
 
+class HLSLHitObjectAttr : public InheritableAttr {
+
+public:
+  static HLSLHitObjectAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLHitObjectAttr *A = new (Ctx) HLSLHitObjectAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLHitObjectAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLHitObject, R, SI, 0, 0)
+  {
+  }
+
+  HLSLHitObjectAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLHitObject; }
+};
+
 class HLSLInAttr : public InheritableAttr {
 
 public:
@@ -3392,6 +3417,31 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLLoop; }
+};
+
+class HLSLMatrixAttr : public InheritableAttr {
+
+public:
+  static HLSLMatrixAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLMatrixAttr *A = new (Ctx) HLSLMatrixAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLMatrixAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLMatrix, R, SI, 0, 0)
+  {
+  }
+
+  HLSLMatrixAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLMatrix; }
 };
 
 class HLSLMaxRecordsAttr : public InheritableAttr {
@@ -4577,6 +4627,106 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLRayPayload; }
 };
 
+class HLSLRayQueryObjectAttr : public InheritableAttr {
+
+public:
+  static HLSLRayQueryObjectAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLRayQueryObjectAttr *A = new (Ctx) HLSLRayQueryObjectAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLRayQueryObjectAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLRayQueryObject, R, SI, 0, 0)
+  {
+  }
+
+  HLSLRayQueryObjectAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLRayQueryObject; }
+};
+
+class HLSLReorderCoherentAttr : public InheritableAttr {
+
+public:
+  static HLSLReorderCoherentAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLReorderCoherentAttr *A = new (Ctx) HLSLReorderCoherentAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLReorderCoherentAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLReorderCoherent, R, SI, 0, 0)
+  {
+  }
+
+  HLSLReorderCoherentAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLReorderCoherent; }
+};
+
+class HLSLResourceAttr : public InheritableAttr {
+unsigned resKindUint;
+
+unsigned resClassUint;
+
+
+public:
+  static HLSLResourceAttr *CreateImplicit(ASTContext &Ctx, unsigned ResKindUint, unsigned ResClassUint, SourceRange Loc = SourceRange()) {
+    HLSLResourceAttr *A = new (Ctx) HLSLResourceAttr(Loc, Ctx, ResKindUint, ResClassUint, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLResourceAttr(SourceRange R, ASTContext &Ctx
+              , unsigned ResKindUint
+              , unsigned ResClassUint
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLResource, R, SI, 0, 0)
+              , resKindUint(ResKindUint)
+              , resClassUint(ResClassUint)
+  {
+
+
+  }
+
+  HLSLResourceAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getResKindUint() const {
+    return resKindUint;
+  }
+
+  unsigned getResClassUint() const {
+    return resClassUint;
+  }
+
+
+  hlsl::DXIL::ResourceKind getResKind() const {
+    return (hlsl::DXIL::ResourceKind)getResKindUint();
+  }
+  hlsl::DXIL::ResourceClass getResClass() const {
+    return (hlsl::DXIL::ResourceClass)getResClassUint();
+  }
+  
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLResource; }
+};
+
 class HLSLRootSignatureAttr : public InheritableAttr {
 unsigned signatureNameLength;
 char *signatureName;
@@ -4787,6 +4937,117 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLSnorm; }
 };
 
+class HLSLStreamOutputAttr : public InheritableAttr {
+unsigned primVertices;
+
+
+public:
+  static HLSLStreamOutputAttr *CreateImplicit(ASTContext &Ctx, unsigned PrimVertices, SourceRange Loc = SourceRange()) {
+    HLSLStreamOutputAttr *A = new (Ctx) HLSLStreamOutputAttr(Loc, Ctx, PrimVertices, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLStreamOutputAttr(SourceRange R, ASTContext &Ctx
+              , unsigned PrimVertices
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLStreamOutput, R, SI, 0, 0)
+              , primVertices(PrimVertices)
+  {
+
+  }
+
+  HLSLStreamOutputAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getPrimVertices() const {
+    return primVertices;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLStreamOutput; }
+};
+
+class HLSLSubObjectAttr : public InheritableAttr {
+unsigned subObjKindUint;
+
+unsigned hitGroupType;
+
+
+public:
+  static HLSLSubObjectAttr *CreateImplicit(ASTContext &Ctx, unsigned SubObjKindUint, unsigned HitGroupType, SourceRange Loc = SourceRange()) {
+    HLSLSubObjectAttr *A = new (Ctx) HLSLSubObjectAttr(Loc, Ctx, SubObjKindUint, HitGroupType, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLSubObjectAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SubObjKindUint
+              , unsigned HitGroupType
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLSubObject, R, SI, 0, 0)
+              , subObjKindUint(SubObjKindUint)
+              , hitGroupType(HitGroupType)
+  {
+
+
+  }
+
+  HLSLSubObjectAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  unsigned getSubObjKindUint() const {
+    return subObjKindUint;
+  }
+
+  unsigned getHitGroupType() const {
+    return hitGroupType;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLSubObject; }
+};
+
+class HLSLTessPatchAttr : public InheritableAttr {
+bool isInput;
+
+
+public:
+  static HLSLTessPatchAttr *CreateImplicit(ASTContext &Ctx, bool IsInput, SourceRange Loc = SourceRange()) {
+    HLSLTessPatchAttr *A = new (Ctx) HLSLTessPatchAttr(Loc, Ctx, IsInput, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLTessPatchAttr(SourceRange R, ASTContext &Ctx
+              , bool IsInput
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLTessPatch, R, SI, 0, 0)
+              , isInput(IsInput)
+  {
+
+  }
+
+  HLSLTessPatchAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+  bool getIsInput() const {
+    return isInput;
+  }
+
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLTessPatch; }
+};
+
 class HLSLTriangleAttr : public InheritableAttr {
 
 public:
@@ -4952,6 +5213,31 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::HLSLUnroll; }
+};
+
+class HLSLVectorAttr : public InheritableAttr {
+
+public:
+  static HLSLVectorAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    HLSLVectorAttr *A = new (Ctx) HLSLVectorAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  HLSLVectorAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::HLSLVector, R, SI, 0, 0)
+  {
+  }
+
+  HLSLVectorAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::HLSLVector; }
 };
 
 class HLSLVerticesAttr : public InheritableAttr {
@@ -8765,6 +9051,31 @@ public:
   static bool classof(const Attr *A) { return A->getKind() == attr::Uuid; }
 };
 
+class VKAliasedPointerAttr : public InheritableAttr {
+
+public:
+  static VKAliasedPointerAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    VKAliasedPointerAttr *A = new (Ctx) VKAliasedPointerAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  VKAliasedPointerAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::VKAliasedPointer, R, SI, 0, 0)
+  {
+  }
+
+  VKAliasedPointerAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::VKAliasedPointer; }
+};
+
 class VKBindingAttr : public InheritableAttr {
 int binding;
 
@@ -8819,6 +9130,31 @@ public:
 
 
   static bool classof(const Attr *A) { return A->getKind() == attr::VKBinding; }
+};
+
+class VKBufferPointerAttr : public InheritableAttr {
+
+public:
+  static VKBufferPointerAttr *CreateImplicit(ASTContext &Ctx, SourceRange Loc = SourceRange()) {
+    VKBufferPointerAttr *A = new (Ctx) VKBufferPointerAttr(Loc, Ctx, 0);
+    A->setImplicit(true);
+    return A;
+  }
+
+  VKBufferPointerAttr(SourceRange R, ASTContext &Ctx
+              , unsigned SI
+             )
+    : InheritableAttr(attr::VKBufferPointer, R, SI, 0, 0)
+  {
+  }
+
+  VKBufferPointerAttr *clone(ASTContext &C) const;
+  void printPretty(raw_ostream &OS,
+                   const PrintingPolicy &Policy) const;
+  const char *getSpelling() const;
+
+
+  static bool classof(const Attr *A) { return A->getKind() == attr::VKBufferPointer; }
 };
 
 class VKBuiltInAttr : public InheritableAttr {

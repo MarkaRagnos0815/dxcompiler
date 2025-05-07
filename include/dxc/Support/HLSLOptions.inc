@@ -212,6 +212,8 @@ OPTION(prefix_3, "fspv-target-env=", fspv_target_env_EQ, Joined, spirv_Group, IN
        "Specify the target environment: vulkan1.0 (default), vulkan1.1, vulkan1.1spirv1.4, vulkan1.2, vulkan1.3, or universal1.5", 0)
 OPTION(prefix_3, "fspv-use-legacy-buffer-matrix-order", fspv_use_legacy_buffer_matrix_order, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Assume the legacy matrix order (row major) when accessing raw buffers (e.g., ByteAdddressBuffer)", 0)
+OPTION(prefix_3, "fspv-use-vulkan-memory-model", fspv_use_vulkan_memory_model, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
+       "Generates SPIR-V modules that use the Vulkan memory model instead of GLSL450.", 0)
 OPTION(prefix_3, "ftime-report", ftime_report, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Print time report", 0)
 OPTION(prefix_3, "ftime-trace-granularity=", ftime_trace_granularity_EQ, Joined, hlslcomp_Group, INVALID, 0, CoreOption, 0,
@@ -221,16 +223,20 @@ OPTION(prefix_3, "ftime-trace=", ftime_trace_EQ, Joined, hlslcomp_Group, INVALID
 OPTION(prefix_3, "ftime-trace", ftime_trace, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Print hierchial time tracing to stdout", 0)
 OPTION(prefix_3, "funsafe-math-optimizations", funsafe_math_optimizations, Flag, hlsloptz_Group, INVALID, 0, 0, 0, 0, 0)
-OPTION(prefix_3, "fvk-allow-rwstructuredbuffer-arrays", fvk_allow_rwstructuredbuffer_arrays, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption | HelpHidden, 0,
-       "Allow arrays of RWStructuredBuffers, AppendStructuredBuffers, and ConsumeStructuredBuffers. This is in development, and the option will be removed when the feature is complete.", 0)
 OPTION(prefix_3, "fvk-auto-shift-bindings", fvk_auto_shift_bindings, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Apply fvk-*-shift to resources without an explicit register assignment.", 0)
 OPTION(prefix_3, "fvk-b-shift", fvk_b_shift, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
        "Specify Vulkan binding number shift for b-type register", "<shift> <space>")
+OPTION(prefix_3, "fvk-bind-counter-heap", fvk_bind_counter_heap, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
+       "Specify Vulkan binding number and set number for the counter heap.", "<binding> <set>")
 OPTION(prefix_3, "fvk-bind-globals", fvk_bind_globals, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
        "Specify Vulkan binding number and set number for the $Globals cbuffer", "<binding> <set>")
 OPTION(prefix_3, "fvk-bind-register", fvk_bind_register, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 4,
        "Specify Vulkan descriptor set and binding for a specific register", "<type-number> <space> <binding> <set>")
+OPTION(prefix_3, "fvk-bind-resource-heap", fvk_bind_resource_heap, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
+       "Specify Vulkan binding number and set number for the resource heap.", "<binding> <set>")
+OPTION(prefix_3, "fvk-bind-sampler-heap", fvk_bind_sampler_heap, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
+       "Specify Vulkan binding number and set number for the sampler heap.", "<binding> <set>")
 OPTION(prefix_3, "fvk-invert-y", fvk_invert_y, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Negate SV_Position.y before writing to stage output in VS/DS/GS to accommodate Vulkan's coordinate system", 0)
 OPTION(prefix_3, "fvk-s-shift", fvk_s_shift, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
@@ -239,6 +245,8 @@ OPTION(prefix_3, "fvk-stage-io-order=", fvk_stage_io_order_EQ, Joined, spirv_Gro
        "Specify Vulkan stage I/O location assignment order", 0)
 OPTION(prefix_3, "fvk-support-nonzero-base-instance", fvk_support_nonzero_base_instance, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Follow Vulkan spec to use gl_BaseInstance as the first vertex instance, which makes SV_InstanceID = gl_InstanceIndex - gl_BaseInstance (without this option, SV_InstanceID = gl_InstanceIndex)", 0)
+OPTION(prefix_3, "fvk-support-nonzero-base-vertex", fvk_support_nonzero_base_vertex, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
+       "Follow Vulkan spec to use gl_BaseVertex as the first vertex, which makes SV_VertexID = gl_VertexIndex - gl_BaseVertex (without this option, SV_VertexID = gl_VertexIndex)", 0)
 OPTION(prefix_3, "fvk-t-shift", fvk_t_shift, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
        "Specify Vulkan binding number shift for t-type register", "<shift> <space>")
 OPTION(prefix_3, "fvk-u-shift", fvk_u_shift, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 2,
@@ -294,6 +302,8 @@ OPTION(prefix_1, "MD", write_dependencies, Flag, INVALID, INVALID, 0, CoreOption
        "Write a file with .d extension that will contain the list of the compilation target dependencies.", 0)
 OPTION(prefix_1, "memdep-block-scan-limit", memdep_block_scan_limit, Separate, hlsloptz_Group, INVALID, 0, CoreOption | DriverOption | HelpHidden, 0,
        "The number of instructions to scan in a block in memory dependency analysis.", 0)
+OPTION(prefix_3, "metal", metal, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
+       "Generate Metal code", 0)
 OPTION(prefix_1, "MF", write_dependencies_to, JoinedOrSeparate, INVALID, INVALID, 0, CoreOption | DriverOption, 0,
        "Write the specfied file that will contain the list of the compilation target dependencies.", "<file>")
 OPTION(prefix_1, "M", dump_dependencies, Flag, INVALID, INVALID, 0, CoreOption | DriverOption, 0,
@@ -401,7 +411,7 @@ OPTION(prefix_1, "skip-static", rw_skip_static, Flag, hlslrewrite_Group, INVALID
 OPTION(prefix_3, "spirv", spirv, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Generate SPIR-V code", 0)
 OPTION(prefix_1, "T", target_profile, JoinedOrSeparate, hlslcomp_Group, INVALID, 0, CoreOption, 0,
-       "Set target profile. \n\t<profile>: ps_6_0, ps_6_1, ps_6_2, ps_6_3, ps_6_4, ps_6_5, ps_6_6, ps_6_7, ps_6_8, \n\t\t vs_6_0, vs_6_1, vs_6_2, vs_6_3, vs_6_4, vs_6_5, vs_6_6, vs_6_7, vs_6_8, \n\t\t gs_6_0, gs_6_1, gs_6_2, gs_6_3, gs_6_4, gs_6_5, gs_6_6, gs_6_7, gs_6_8, \n\t\t hs_6_0, hs_6_1, hs_6_2, hs_6_3, hs_6_4, hs_6_5, hs_6_6, hs_6_7, hs_6_8, \n\t\t ds_6_0, ds_6_1, ds_6_2, ds_6_3, ds_6_4, ds_6_5, ds_6_6, ds_6_7, ds_6_8, \n\t\t cs_6_0, cs_6_1, cs_6_2, cs_6_3, cs_6_4, cs_6_5, cs_6_6, cs_6_7, cs_6_8, \n\t\t lib_6_1, lib_6_2, lib_6_3, lib_6_4, lib_6_5, lib_6_6, lib_6_7, lib_6_8, \n\t\t ms_6_5, ms_6_6, ms_6_7, ms_6_8, \n\t\t as_6_5, as_6_6, as_6_7, as_6_8, \n\t\t ", "<profile>")
+       "Set target profile. \n\t<profile>: ps_6_0, ps_6_1, ps_6_2, ps_6_3, ps_6_4, ps_6_5, ps_6_6, ps_6_7, ps_6_8, ps_6_9, \n\t\t vs_6_0, vs_6_1, vs_6_2, vs_6_3, vs_6_4, vs_6_5, vs_6_6, vs_6_7, vs_6_8, vs_6_9, \n\t\t gs_6_0, gs_6_1, gs_6_2, gs_6_3, gs_6_4, gs_6_5, gs_6_6, gs_6_7, gs_6_8, gs_6_9, \n\t\t hs_6_0, hs_6_1, hs_6_2, hs_6_3, hs_6_4, hs_6_5, hs_6_6, hs_6_7, hs_6_8, hs_6_9, \n\t\t ds_6_0, ds_6_1, ds_6_2, ds_6_3, ds_6_4, ds_6_5, ds_6_6, ds_6_7, ds_6_8, ds_6_9, \n\t\t cs_6_0, cs_6_1, cs_6_2, cs_6_3, cs_6_4, cs_6_5, cs_6_6, cs_6_7, cs_6_8, cs_6_9, \n\t\t lib_6_1, lib_6_2, lib_6_3, lib_6_4, lib_6_5, lib_6_6, lib_6_7, lib_6_8, lib_6_9, \n\t\t ms_6_5, ms_6_6, ms_6_7, ms_6_8, ms_6_9, \n\t\t as_6_5, as_6_6, as_6_7, as_6_8, as_6_9, \n\t\t ", "<profile>")
 OPTION(prefix_1, "unchanged", rw_unchanged, Flag, hlslrewrite_Group, INVALID, 0, RewriteOption, 0,
        "Rewrite HLSL, without changes.", 0)
 OPTION(prefix_1, "validator-version", validator_version, Separate, hlslcomp_Group, INVALID, 0, CoreOption | HelpHidden, 0,

@@ -4,6 +4,10 @@
 //
 // This file is distributed under the University of Illinois Open Source
 // License. See LICENSE.TXT for details.
+//
+// Modifications Copyright(C) 2025 Advanced Micro Devices, Inc.
+// All rights reserved.
+//
 //===----------------------------------------------------------------------===//
 #ifndef LLVM_CLANG_SPIRV_EMITVISITOR_H
 #define LLVM_CLANG_SPIRV_EMITVISITOR_H
@@ -49,15 +53,15 @@ public:
   EmitTypeHandler(ASTContext &astCtx, SpirvContext &spvContext,
                   const SpirvCodeGenOptions &opts, FeatureManager &featureMgr,
                   std::vector<uint32_t> *debugVec,
-                  std::vector<uint32_t> *decVec,
+                  std::vector<uint32_t> *decVec, std::vector<uint32_t> *fwdVec,
                   std::vector<uint32_t> *typesVec,
                   const std::function<uint32_t()> &takeNextIdFn)
       : astContext(astCtx), context(spvContext), featureManager(featureMgr),
         debugVariableBinary(debugVec), annotationsBinary(decVec),
-        typeConstantBinary(typesVec), takeNextIdFunction(takeNextIdFn),
-        emittedConstantInts({}), emittedConstantFloats({}),
-        emittedConstantComposites({}), emittedConstantNulls({}),
-        emittedUndef({}), emittedConstantBools() {
+        fwdDeclBinary(fwdVec), typeConstantBinary(typesVec),
+        takeNextIdFunction(takeNextIdFn), emittedConstantInts({}),
+        emittedConstantFloats({}), emittedConstantComposites({}),
+        emittedConstantNulls({}), emittedUndef({}), emittedConstantBools() {
     assert(decVec);
     assert(typesVec);
   }
@@ -78,7 +82,7 @@ public:
   uint32_t emitType(const SpirvType *);
 
   // Emits OpDecorate (or OpMemberDecorate if memberIndex is non-zero)
-  // targetting the given type. Uses the given decoration kind and its
+  // targeting the given type. Uses the given decoration kind and its
   // parameters.
   void emitDecoration(uint32_t typeResultId, spv::Decoration,
                       llvm::ArrayRef<uint32_t> decorationParams,
@@ -120,7 +124,7 @@ public:
 
 private:
   void initTypeInstruction(spv::Op op);
-  void finalizeTypeInstruction();
+  void finalizeTypeInstruction(bool isFwdDecl = false);
 
   // Returns the result-id for the given type and decorations. If a type with
   // the same decorations have already been used, it returns the existing
@@ -161,6 +165,7 @@ private:
   std::vector<uint32_t> curDecorationInst;
   std::vector<uint32_t> *debugVariableBinary;
   std::vector<uint32_t> *annotationsBinary;
+  std::vector<uint32_t> *fwdDeclBinary;
   std::vector<uint32_t> *typeConstantBinary;
   std::function<uint32_t()> takeNextIdFunction;
 
@@ -207,7 +212,7 @@ public:
       : Visitor(opts, spvCtx), astContext(astCtx), featureManager(featureMgr),
         id(0),
         typeHandler(astCtx, spvCtx, opts, featureMgr, &debugVariableBinary,
-                    &annotationsBinary, &typeConstantBinary,
+                    &annotationsBinary, &fwdDeclBinary, &typeConstantBinary,
                     [this]() -> uint32_t { return takeNextId(); }),
         debugMainFileId(0), debugInfoExtInstId(0), debugLineStart(0),
         debugLineEnd(0), debugColumnStart(0), debugColumnEnd(0),
@@ -228,7 +233,7 @@ public:
   bool visit(SpirvEmitVertex *) override;
   bool visit(SpirvEndPrimitive *) override;
   bool visit(SpirvEntryPoint *) override;
-  bool visit(SpirvExecutionMode *) override;
+  bool visit(SpirvExecutionModeBase *) override;
   bool visit(SpirvString *) override;
   bool visit(SpirvSource *) override;
   bool visit(SpirvModuleProcessed *) override;
@@ -254,6 +259,8 @@ public:
   bool visit(SpirvConstantFloat *) override;
   bool visit(SpirvConstantComposite *) override;
   bool visit(SpirvConstantNull *) override;
+  bool visit(SpirvConvertPtrToU *) override;
+  bool visit(SpirvConvertUToPtr *) override;
   bool visit(SpirvUndef *) override;
   bool visit(SpirvCompositeConstruct *) override;
   bool visit(SpirvCompositeExtract *) override;
@@ -297,6 +304,7 @@ public:
   bool visit(SpirvDebugExpression *) override;
   bool visit(SpirvDebugTypeBasic *) override;
   bool visit(SpirvDebugTypeVector *) override;
+  bool visit(SpirvDebugTypeMatrix *) override;
   bool visit(SpirvDebugTypeArray *) override;
   bool visit(SpirvDebugTypeFunction *) override;
   bool visit(SpirvDebugTypeComposite *) override;
@@ -398,6 +406,11 @@ private:
     emittedSource[fileId] = dbg_src_id;
   }
 
+  // Emits an OpCooperativeMatrixLength instruction into the main binary
+  // section. It will replace the operand with the id of the type of the
+  // operand.
+  bool emitCooperativeMatrixLength(SpirvUnaryOp *inst);
+
 private:
   /// Emits error to the diagnostic engine associated with this visitor.
   template <unsigned N>
@@ -432,7 +445,9 @@ private:
   // All annotation instructions: OpDecorate, OpMemberDecorate, OpGroupDecorate,
   // OpGroupMemberDecorate, and OpDecorationGroup.
   std::vector<uint32_t> annotationsBinary;
-  // All type and constant instructions
+  // All forward pointer type declaration instructions
+  std::vector<uint32_t> fwdDeclBinary;
+  // All other type and constant instructions
   std::vector<uint32_t> typeConstantBinary;
   // All global variable declarations (all OpVariable instructions whose Storage
   // Class is not Function)

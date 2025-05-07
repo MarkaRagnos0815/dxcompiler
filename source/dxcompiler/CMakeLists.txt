@@ -18,6 +18,7 @@ target_include_directories(
 	${PROJECT_NAME}
 	BEFORE
 	PRIVATE
+	../dxcvalidator
 	../../include/
 	../../include/dxc/Tracing/
 	../../include/llvm/llvm-assert/
@@ -51,7 +52,7 @@ set(EXPORT_VISIBLE true)
 include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/default_target_settings.cmake)
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${TARGET_TMP_DIR}/lib/${PROJECT_OUTPUT_SUB_PATH})
-target_link_options(${PROJECT_NAME} PRIVATE "-s")
+#target_link_options(${PROJECT_NAME} PRIVATE "-s")
 
 
 set(DXC_LIBRARIES
@@ -82,9 +83,11 @@ set(DXC_LIBRARIES
 	LLVMDxilCompression
 	LLVMDxilContainer
 	${LLVMDxilDia}
+	LLVMDxilHash
 	LLVMDxilPdbInfo
 	LLVMDxilPIXPasses
 	LLVMDxilRootSignature
+	LLVMDxilValidation
 	LLVMDxrFallback
 	LLVMHLSL
 	LLVMInstCombine
@@ -106,6 +109,7 @@ set(DXC_LIBRARIES
 	clangASTMatchers
 	SPIRV-Tools
 	SPIRV-Tools-opt
+	dxcvalidator
 	${DXC_DIAG_GUIDS}
 )
 target_link_libraries(${PROJECT_NAME}

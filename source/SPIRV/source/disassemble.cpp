@@ -23,8 +23,10 @@
 #include <cassert>
 #include <cstring>
 #include <iomanip>
+#include <ios>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <stack>
 #include <unordered_map>
 #include <utility>
@@ -38,6 +40,7 @@
 #include "source/print.h"
 #include "source/spirv_constant.h"
 #include "source/spirv_endian.h"
+#include "source/table2.h"
 #include "source/util/hex_float.h"
 #include "source/util/make_unique.h"
 #include "spirv-tools/libspirv.h"
@@ -883,11 +886,11 @@ void InstructionDisassembler::EmitOperand(std::ostream& stream,
       }
     } break;
     case SPV_OPERAND_TYPE_SPEC_CONSTANT_OP_NUMBER: {
-      spv_opcode_desc opcode_desc;
-      if (grammar_.lookupOpcode(spv::Op(word), &opcode_desc))
+      const spvtools::InstructionDesc* opcodeEntry = nullptr;
+      if (LookupOpcode(spv::Op(word), &opcodeEntry))
         assert(false && "should have caught this earlier");
       SetRed(stream);
-      stream << opcode_desc->name;
+      stream << opcodeEntry->name().data();
     } break;
     case SPV_OPERAND_TYPE_LITERAL_INTEGER:
     case SPV_OPERAND_TYPE_TYPED_LITERAL_NUMBER:
@@ -946,10 +949,10 @@ void InstructionDisassembler::EmitOperand(std::ostream& stream,
     case SPV_OPERAND_TYPE_QUANTIZATION_MODES:
     case SPV_OPERAND_TYPE_FPENCODING:
     case SPV_OPERAND_TYPE_OVERFLOW_MODES: {
-      spv_operand_desc entry;
-      if (grammar_.lookupOperand(operand.type, word, &entry))
+      const spvtools::OperandDesc* entry = nullptr;
+      if (spvtools::LookupOperand(operand.type, word, &entry))
         assert(false && "should have caught this earlier");
-      stream << entry->name;
+      stream << entry->name().data();
     } break;
     case SPV_OPERAND_TYPE_FP_FAST_MATH_MODE:
     case SPV_OPERAND_TYPE_FUNCTION_CONTROL:
@@ -966,10 +969,10 @@ void InstructionDisassembler::EmitOperand(std::ostream& stream,
       if (spvOperandIsConcreteMask(operand.type)) {
         EmitMaskOperand(stream, operand.type, word);
       } else if (spvOperandIsConcrete(operand.type)) {
-        spv_operand_desc entry;
-        if (grammar_.lookupOperand(operand.type, word, &entry))
+        const spvtools::OperandDesc* entry = nullptr;
+        if (spvtools::LookupOperand(operand.type, word, &entry))
           assert(false && "should have caught this earlier");
-        stream << entry->name;
+        stream << entry->name().data();
       } else {
         assert(false && "unhandled or invalid case");
       }
@@ -989,20 +992,20 @@ void InstructionDisassembler::EmitMaskOperand(std::ostream& stream,
   for (mask = 1; remaining_word; mask <<= 1) {
     if (remaining_word & mask) {
       remaining_word ^= mask;
-      spv_operand_desc entry;
-      if (grammar_.lookupOperand(type, mask, &entry))
+      const spvtools::OperandDesc* entry = nullptr;
+      if (spvtools::LookupOperand(type, mask, &entry))
         assert(false && "should have caught this earlier");
       if (num_emitted) stream << "|";
-      stream << entry->name;
+      stream << entry->name().data();
       num_emitted++;
     }
   }
   if (!num_emitted) {
     // An operand value of 0 was provided, so represent it by the name
     // of the 0 value. In many cases, that's "None".
-    spv_operand_desc entry;
-    if (SPV_SUCCESS == grammar_.lookupOperand(type, 0, &entry))
-      stream << entry->name;
+    const spvtools::OperandDesc* entry = nullptr;
+    if (SPV_SUCCESS == spvtools::LookupOperand(type, 0, &entry))
+      stream << entry->name().data();
   }
 }
 

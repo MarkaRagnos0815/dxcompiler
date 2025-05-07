@@ -498,6 +498,9 @@
         return 0;
     break;
   }
+  case AT_HLSLHitObject: {
+    break;
+  }
   case AT_HLSLIn: {
     if (Name == "in" && SyntaxUsed == 1 && Scope == "")
         return 0;
@@ -541,6 +544,9 @@
   case AT_HLSLLoop: {
     if (Name == "loop" && SyntaxUsed == 1 && Scope == "")
         return 0;
+    break;
+  }
+  case AT_HLSLMatrix: {
     break;
   }
   case AT_HLSLMaxRecords: {
@@ -686,6 +692,17 @@
         return 0;
     break;
   }
+  case AT_HLSLRayQueryObject: {
+    break;
+  }
+  case AT_HLSLReorderCoherent: {
+    if (Name == "reordercoherent" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLResource: {
+    break;
+  }
   case AT_HLSLRootSignature: {
     if (Name == "RootSignature" && SyntaxUsed == 1 && Scope == "")
         return 0;
@@ -719,6 +736,15 @@
         return 0;
     break;
   }
+  case AT_HLSLStreamOutput: {
+    break;
+  }
+  case AT_HLSLSubObject: {
+    break;
+  }
+  case AT_HLSLTessPatch: {
+    break;
+  }
   case AT_HLSLTriangle: {
     if (Name == "triangle" && SyntaxUsed == 1 && Scope == "")
         return 0;
@@ -747,6 +773,9 @@
   case AT_HLSLUnroll: {
     if (Name == "unroll" && SyntaxUsed == 1 && Scope == "")
         return 0;
+    break;
+  }
+  case AT_HLSLVector: {
     break;
   }
   case AT_HLSLVertices: {
@@ -1500,8 +1529,18 @@
         return 0;
     break;
   }
+  case AT_VKAliasedPointer: {
+    if (Name == "aliased_pointer" && SyntaxUsed == 1 && Scope == "vk")
+        return 0;
+    break;
+  }
   case AT_VKBinding: {
     if (Name == "binding" && SyntaxUsed == 1 && Scope == "vk")
+        return 0;
+    break;
+  }
+  case AT_VKBufferPointer: {
+    if (Name == "hlsl_vk_buffer_pointer" && SyntaxUsed == 1 && Scope == "")
         return 0;
     break;
   }

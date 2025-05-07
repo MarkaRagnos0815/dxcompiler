@@ -348,6 +348,7 @@ if (!Scope || Scope->getName() == "") {
     .Case("precise", LangOpts.CPlusPlus11 ? 2015 : 0)
     .Case("primitives", LangOpts.CPlusPlus11 ? 2015 : 0)
     .Case("raypayload", LangOpts.CPlusPlus11 ? 2015 : 0)
+    .Case("reordercoherent", LangOpts.CPlusPlus11 ? 2015 : 0)
     .Case("RootSignature", LangOpts.CPlusPlus11 ? 2015 : 0)
     .Case("row_major", LangOpts.CPlusPlus11 ? 2015 : 0)
     .Case("sample", LangOpts.CPlusPlus11 ? 2015 : 0)
@@ -366,6 +367,7 @@ if (!Scope || Scope->getName() == "") {
     .Case("wavesize", LangOpts.CPlusPlus11 ? 2017 : 0)
     .Case("noinline", LangOpts.CPlusPlus11 ? 2017 : 0)
     .Case("noinline", LangOpts.CPlusPlus11 ? 2017 : 0)
+    .Case("hlsl_vk_buffer_pointer", LangOpts.CPlusPlus11 ? 2021 : 0)
     .Default(0);
 } else if (Scope->getName() == "clang") {
   return llvm::StringSwitch<int>(Name)
@@ -479,6 +481,7 @@ if (!Scope || Scope->getName() == "") {
     .Default(0);
 } else if (Scope->getName() == "vk") {
   return llvm::StringSwitch<int>(Name)
+    .Case("aliased_pointer", (LangOpts.HLSL || LangOpts.CPlusPlus11) ? 1 : 0)
     .Case("binding", (LangOpts.HLSL || LangOpts.CPlusPlus11) ? 1 : 0)
     .Case("builtin", (LangOpts.HLSL || LangOpts.CPlusPlus11) ? 1 : 0)
     .Case("ext_capability", (LangOpts.HLSL || LangOpts.CPlusPlus11) ? 1 : 0)

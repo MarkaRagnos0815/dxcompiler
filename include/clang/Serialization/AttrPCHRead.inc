@@ -816,6 +816,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLHitObject: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLHitObjectAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLIn: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -896,6 +905,15 @@
     bool isImplicit = Record[Idx++];
     unsigned Spelling = Record[Idx++];
     New = new (Context) HLSLLoopAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLMatrix: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLMatrixAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
   }
@@ -1186,6 +1204,35 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLRayQueryObject: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLRayQueryObjectAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLReorderCoherent: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLReorderCoherentAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLResource: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned resKindUint = Record[Idx++];
+    unsigned resClassUint = Record[Idx++];
+    New = new (Context) HLSLResourceAttr(Range, Context, resKindUint, resClassUint, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLRootSignature: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -1243,6 +1290,37 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLStreamOutput: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned primVertices = Record[Idx++];
+    New = new (Context) HLSLStreamOutputAttr(Range, Context, primVertices, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLSubObject: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned subObjKindUint = Record[Idx++];
+    unsigned hitGroupType = Record[Idx++];
+    New = new (Context) HLSLSubObjectAttr(Range, Context, subObjKindUint, hitGroupType, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLTessPatch: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    bool isInput = Record[Idx++];
+    New = new (Context) HLSLTessPatchAttr(Range, Context, isInput, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLTriangle: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -1293,6 +1371,15 @@
     unsigned Spelling = Record[Idx++];
     int count = Record[Idx++];
     New = new (Context) HLSLUnrollAttr(Range, Context, count, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLVector: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLVectorAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
   }
@@ -2273,6 +2360,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::VKAliasedPointer: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) VKAliasedPointerAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::VKBinding: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -2280,6 +2376,15 @@
     int binding = Record[Idx++];
     int set = Record[Idx++];
     New = new (Context) VKBindingAttr(Range, Context, binding, set, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::VKBufferPointer: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) VKBufferPointerAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;

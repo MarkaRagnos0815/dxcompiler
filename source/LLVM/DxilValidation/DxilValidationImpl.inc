@@ -10,6 +10,9 @@ switch(value) {
   case hlsl::ValidationRule::ContainerPartMissing: return "Missing part '%0' required by module.";
   case hlsl::ValidationRule::ContainerPartInvalid: return "Unknown part '%0' found in DXIL container.";
   case hlsl::ValidationRule::ContainerRootSignatureIncompatible: return "Root Signature in DXIL container is not compatible with shader.";
+  case hlsl::ValidationRule::ContainerContentMatches: return "DXIL container mismatch for '%0' between '%1' part:('%2') and DXIL module:('%3')";
+  case hlsl::ValidationRule::ContainerContentInvalid: return "In '%0', '%1' is not well-formed";
+  case hlsl::ValidationRule::ContainerUnusedItemInTable: return "In '%0', '%1' is not used";
   case hlsl::ValidationRule::MetaRequired: return "Required metadata missing.";
   case hlsl::ValidationRule::MetaComputeWithNode: return "Compute entry '%0' has unexpected node shader metadata";
   case hlsl::ValidationRule::MetaKnown: return "Named metadata '%0' is unknown.";
@@ -123,8 +126,9 @@ switch(value) {
   case hlsl::ValidationRule::InstrOffsetOnUAVLoad: return "uav load don't support offset.";
   case hlsl::ValidationRule::InstrMipOnUAVLoad: return "uav load don't support mipLevel/sampleIndex.";
   case hlsl::ValidationRule::InstrSampleIndexForLoad2DMS: return "load on Texture2DMS/2DMSArray require sampleIndex.";
-  case hlsl::ValidationRule::InstrCoordinateCountForRawTypedBuf: return "raw/typed buffer don't need 2 coordinates.";
-  case hlsl::ValidationRule::InstrCoordinateCountForStructBuf: return "structured buffer require 2 coordinates.";
+  case hlsl::ValidationRule::InstrCoordinateCountForRawTypedBuf: return "raw/typed buffer offset must be undef.";
+  case hlsl::ValidationRule::InstrConstAlignForRawBuf: return "Raw Buffer alignment value must be a constant.";
+  case hlsl::ValidationRule::InstrCoordinateCountForStructBuf: return "structured buffer requires defined index and offset coordinates.";
   case hlsl::ValidationRule::InstrMipLevelForGetDimension: return "Use mip level on buffer when GetDimensions.";
   case hlsl::ValidationRule::InstrDxilStructUser: return "Dxil struct types should only be used by ExtractValue.";
   case hlsl::ValidationRule::InstrDxilStructUserOutOfBound: return "Index out of bound when extract value from dxil struct types.";
@@ -150,6 +154,17 @@ switch(value) {
   case hlsl::ValidationRule::InstrSVConflictingLaunchMode: return "Call to DXIL intrinsic %0 (%1) is not allowed in node shader launch type %2";
   case hlsl::ValidationRule::InstrAtomicConst: return "Constant destination to atomic.";
   case hlsl::ValidationRule::InstrNodeRecordHandleUseAfterComplete: return "Invalid use of completed record handle.";
+  case hlsl::ValidationRule::InstrUndefHitObject: return "HitObject is undef.";
+  case hlsl::ValidationRule::InstrParamMultiple: return "parameter '%0' must be a multiple of %1, got %2";
+  case hlsl::ValidationRule::InstrMayReorderThreadUndefCoherenceHintParam: return "Use of undef coherence hint or num coherence hint bits in MaybeReorderThread.";
+  case hlsl::ValidationRule::InstrMatVecOpIsUnsignedFlagsAreConst: return "'%1' is not a constant value";
+  case hlsl::ValidationRule::InstrLinalgInterpretationParamAreConst: return "'%1' is not a constant value";
+  case hlsl::ValidationRule::InstrLinalgInvalidRegisterInterpValue: return "'%0' is not a valid %1 interpretation value";
+  case hlsl::ValidationRule::InstrLinalgInvalidMemoryInterpValue: return "'%0' is not a valid %1 interpretation value";
+  case hlsl::ValidationRule::InstrLinalgMatrixShapeParamsAreConst: return "'%0' is not a constant value";
+  case hlsl::ValidationRule::InstrLinalgInvalidMatrixLayoutValueForMatVecOps: return "matrix layout value '%0' is not valid. Must be between [%1 - %2]";
+  case hlsl::ValidationRule::InstrLinalgMatrixLayoutNotTransposable: return "%0 matrix layout is not transposable";
+  case hlsl::ValidationRule::InstrLinalgNotAnUnsignedType: return "IsUnsigned flag set to true for a float type '%0' vector";
   case hlsl::ValidationRule::TypesNoVector: return "Vector type '%0' is not allowed.";
   case hlsl::ValidationRule::TypesDefined: return "Type '%0' is not defined on DXIL primitives.";
   case hlsl::ValidationRule::TypesIntWidth: return "Int type '%0' has an invalid width.";
@@ -158,6 +173,7 @@ switch(value) {
   case hlsl::ValidationRule::TypesI8: return "I8 can only be used as immediate value for intrinsic or as i8* via bitcast by lifetime intrinsics.";
   case hlsl::ValidationRule::SmName: return "Unknown shader model '%0'.";
   case hlsl::ValidationRule::SmDxilVersion: return "Shader model requires Dxil Version %0.%1.";
+  case hlsl::ValidationRule::SmProgramVersion: return "Program Version is %0.%1 but Dxil Module shader model version is %2.%3.";
   case hlsl::ValidationRule::SmOpcode: return "Opcode %0 not valid in shader model %1.";
   case hlsl::ValidationRule::SmOperand: return "Operand must be defined in target shader model.";
   case hlsl::ValidationRule::SmSemantic: return "Semantic '%0' is invalid as %1 %2.";
@@ -255,6 +271,9 @@ switch(value) {
   case hlsl::ValidationRule::DeclFnAttribute: return "Function '%0' contains invalid attribute '%1' with value '%2'.";
   case hlsl::ValidationRule::DeclResourceInFnSig: return "Function '%0' uses resource in function signature.";
   case hlsl::ValidationRule::DeclRayQueryInFnSig: return "Function '%0' uses rayquery object in function signature.";
+  case hlsl::ValidationRule::DeclAllocateRayQueryFlagsAreConst: return "constRayFlags argument of AllocateRayQuery must be constant";
+  case hlsl::ValidationRule::DeclAllocateRayQuery2FlagsAreConst: return "constRayFlags and RayQueryFlags arguments of AllocateRayQuery2 must be constant";
+  case hlsl::ValidationRule::DeclAllowOpacityMicromapsExpectedGivenForceOMM2State: return "RAYQUERY_FLAG_ALLOW_OPACITY_MICROMAPS must be set for RayQueryFlags when RAY_FLAG_FORCE_OMM_2_STATE is set for constRayFlags on AllocateRayQuery2 operation.";
   case hlsl::ValidationRule::DeclPayloadStruct: return "Argument '%0' must be a struct type for payload in shader function '%1'.";
   case hlsl::ValidationRule::DeclAttrStruct: return "Argument '%0' must be a struct type for attributes in shader function '%1'.";
   case hlsl::ValidationRule::DeclParamStruct: return "Argument '%0' must be a struct type for callable shader function '%1'.";
@@ -451,15 +470,31 @@ if ((238 <= op && op <= 243) || (246 <= op && op <= 253))
 if ((256 <= op && op <= 257))
   return (major > 6 || (major == 6 && minor >= 8))
       && (SK == DXIL::ShaderKind::Vertex);
-// Instructions: WaveMatrix_Annotate=226, WaveMatrix_Depth=227,
-// WaveMatrix_Fill=228, WaveMatrix_LoadRawBuf=229,
-// WaveMatrix_LoadGroupShared=230, WaveMatrix_StoreRawBuf=231,
-// WaveMatrix_StoreGroupShared=232, WaveMatrix_Multiply=233,
-// WaveMatrix_MultiplyAccumulate=234, WaveMatrix_ScalarOp=235,
-// WaveMatrix_SumAccumulate=236, WaveMatrix_Add=237
-if ((226 <= op && op <= 237))
+// Instructions: AllocateRayQuery2=258, RawBufferVectorLoad=303,
+// RawBufferVectorStore=304, MatVecMul=305, MatVecMulAdd=306,
+// OuterProductAccumulate=307, VectorAccumulate=308
+if (op == 258 || (303 <= op && op <= 308))
+  return (major > 6 || (major == 6 && minor >= 9));
+// Instructions: MaybeReorderThread=268
+if (op == 268)
   return (major > 6 || (major == 6 && minor >= 9))
-      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute);
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::RayGeneration);
+// Instructions: HitObject_TraceRay=262, HitObject_FromRayQuery=263,
+// HitObject_FromRayQueryWithAttrs=264, HitObject_MakeMiss=265,
+// HitObject_MakeNop=266, HitObject_Invoke=267, HitObject_IsMiss=269,
+// HitObject_IsHit=270, HitObject_IsNop=271, HitObject_RayFlags=272,
+// HitObject_RayTMin=273, HitObject_RayTCurrent=274,
+// HitObject_WorldRayOrigin=275, HitObject_WorldRayDirection=276,
+// HitObject_ObjectRayOrigin=277, HitObject_ObjectRayDirection=278,
+// HitObject_ObjectToWorld3x4=279, HitObject_WorldToObject3x4=280,
+// HitObject_GeometryIndex=281, HitObject_InstanceIndex=282,
+// HitObject_InstanceID=283, HitObject_PrimitiveIndex=284,
+// HitObject_HitKind=285, HitObject_ShaderTableIndex=286,
+// HitObject_SetShaderTableIndex=287, HitObject_LoadLocalRootTableConstant=288,
+// HitObject_Attributes=289
+if ((262 <= op && op <= 267) || (269 <= op && op <= 289))
+  return (major > 6 || (major == 6 && minor >= 9))
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::RayGeneration || SK == DXIL::ShaderKind::ClosestHit || SK == DXIL::ShaderKind::Miss);
 return true;
 }
 
@@ -470,8 +505,8 @@ static bool IsLLVMInstructionAllowed(llvm::Instruction &I) {
 // GetElementPtr=29, AtomicCmpXchg=31, AtomicRMW=32, Trunc=33, ZExt=34,
 // SExt=35, FPToUI=36, FPToSI=37, UIToFP=38, SIToFP=39, FPTrunc=40, FPExt=41,
 // BitCast=44, AddrSpaceCast=45, ICmp=46, FCmp=47, PHI=48, Call=49, Select=50,
-// ExtractValue=57
-return (1 <= op && op <= 3) || (8 <= op && op <= 29) || (31 <= op && op <= 41) || (44 <= op && op <= 50) || op == 57;
+// ExtractElement=54, InsertElement=55, ShuffleVector=56, ExtractValue=57
+return (1 <= op && op <= 3) || (8 <= op && op <= 29) || (31 <= op && op <= 41) || (44 <= op && op <= 50) || (54 <= op && op <= 57);
 }
 
 void GetValidationVersion(unsigned *pMajor, unsigned *pMinor) {// 1.0 is the first validator.
@@ -492,6 +527,6 @@ void GetValidationVersion(unsigned *pMajor, unsigned *pMinor) {// 1.0 is the fir
 // - Mesh and Amplification shaders
 // - DXR 1.1 & RayQuery support
 *pMajor = 1;
-*pMinor = 8;
+*pMinor = 9;
 }
 }

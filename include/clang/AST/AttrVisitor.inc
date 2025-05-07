@@ -336,6 +336,10 @@
   bool VisitHLSLGroupSharedAttr(HLSLGroupSharedAttr *A) {
     return true; 
   };
+  bool TraverseHLSLHitObjectAttr(HLSLHitObjectAttr *A);
+  bool VisitHLSLHitObjectAttr(HLSLHitObjectAttr *A) {
+    return true; 
+  };
   bool TraverseHLSLInAttr(HLSLInAttr *A);
   bool VisitHLSLInAttr(HLSLInAttr *A) {
     return true; 
@@ -370,6 +374,10 @@
   };
   bool TraverseHLSLLoopAttr(HLSLLoopAttr *A);
   bool VisitHLSLLoopAttr(HLSLLoopAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLMatrixAttr(HLSLMatrixAttr *A);
+  bool VisitHLSLMatrixAttr(HLSLMatrixAttr *A) {
     return true; 
   };
   bool TraverseHLSLMaxRecordsAttr(HLSLMaxRecordsAttr *A);
@@ -488,6 +496,18 @@
   bool VisitHLSLRayPayloadAttr(HLSLRayPayloadAttr *A) {
     return true; 
   };
+  bool TraverseHLSLRayQueryObjectAttr(HLSLRayQueryObjectAttr *A);
+  bool VisitHLSLRayQueryObjectAttr(HLSLRayQueryObjectAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLReorderCoherentAttr(HLSLReorderCoherentAttr *A);
+  bool VisitHLSLReorderCoherentAttr(HLSLReorderCoherentAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLResourceAttr(HLSLResourceAttr *A);
+  bool VisitHLSLResourceAttr(HLSLResourceAttr *A) {
+    return true; 
+  };
   bool TraverseHLSLRootSignatureAttr(HLSLRootSignatureAttr *A);
   bool VisitHLSLRootSignatureAttr(HLSLRootSignatureAttr *A) {
     return true; 
@@ -512,6 +532,18 @@
   bool VisitHLSLSnormAttr(HLSLSnormAttr *A) {
     return true; 
   };
+  bool TraverseHLSLStreamOutputAttr(HLSLStreamOutputAttr *A);
+  bool VisitHLSLStreamOutputAttr(HLSLStreamOutputAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLSubObjectAttr(HLSLSubObjectAttr *A);
+  bool VisitHLSLSubObjectAttr(HLSLSubObjectAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLTessPatchAttr(HLSLTessPatchAttr *A);
+  bool VisitHLSLTessPatchAttr(HLSLTessPatchAttr *A) {
+    return true; 
+  };
   bool TraverseHLSLTriangleAttr(HLSLTriangleAttr *A);
   bool VisitHLSLTriangleAttr(HLSLTriangleAttr *A) {
     return true; 
@@ -534,6 +566,10 @@
   };
   bool TraverseHLSLUnrollAttr(HLSLUnrollAttr *A);
   bool VisitHLSLUnrollAttr(HLSLUnrollAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLVectorAttr(HLSLVectorAttr *A);
+  bool VisitHLSLVectorAttr(HLSLVectorAttr *A) {
     return true; 
   };
   bool TraverseHLSLVerticesAttr(HLSLVerticesAttr *A);
@@ -940,8 +976,16 @@
   bool VisitUuidAttr(UuidAttr *A) {
     return true; 
   };
+  bool TraverseVKAliasedPointerAttr(VKAliasedPointerAttr *A);
+  bool VisitVKAliasedPointerAttr(VKAliasedPointerAttr *A) {
+    return true; 
+  };
   bool TraverseVKBindingAttr(VKBindingAttr *A);
   bool VisitVKBindingAttr(VKBindingAttr *A) {
+    return true; 
+  };
+  bool TraverseVKBufferPointerAttr(VKBufferPointerAttr *A);
+  bool VisitVKBufferPointerAttr(VKBufferPointerAttr *A) {
     return true; 
   };
   bool TraverseVKBuiltInAttr(VKBuiltInAttr *A);
@@ -1944,6 +1988,15 @@ bool VISITORCLASS<Derived>::TraverseHLSLGroupSharedAttr(HLSLGroupSharedAttr *A) 
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLHitObjectAttr(HLSLHitObjectAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLHitObjectAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseHLSLInAttr(HLSLInAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -2020,6 +2073,15 @@ bool VISITORCLASS<Derived>::TraverseHLSLLoopAttr(HLSLLoopAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
   if (!getDerived().VisitHLSLLoopAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLMatrixAttr(HLSLMatrixAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLMatrixAttr(A))
     return false;
   return true;
 }
@@ -2286,6 +2348,33 @@ bool VISITORCLASS<Derived>::TraverseHLSLRayPayloadAttr(HLSLRayPayloadAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLRayQueryObjectAttr(HLSLRayQueryObjectAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLRayQueryObjectAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLReorderCoherentAttr(HLSLReorderCoherentAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLReorderCoherentAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLResourceAttr(HLSLResourceAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLResourceAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseHLSLRootSignatureAttr(HLSLRootSignatureAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -2340,6 +2429,33 @@ bool VISITORCLASS<Derived>::TraverseHLSLSnormAttr(HLSLSnormAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLStreamOutputAttr(HLSLStreamOutputAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLStreamOutputAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLSubObjectAttr(HLSLSubObjectAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLSubObjectAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLTessPatchAttr(HLSLTessPatchAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLTessPatchAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseHLSLTriangleAttr(HLSLTriangleAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -2389,6 +2505,15 @@ bool VISITORCLASS<Derived>::TraverseHLSLUnrollAttr(HLSLUnrollAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
   if (!getDerived().VisitHLSLUnrollAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLVectorAttr(HLSLVectorAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLVectorAttr(A))
     return false;
   return true;
 }
@@ -3353,10 +3478,28 @@ bool VISITORCLASS<Derived>::TraverseUuidAttr(UuidAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseVKAliasedPointerAttr(VKAliasedPointerAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitVKAliasedPointerAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseVKBindingAttr(VKBindingAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
   if (!getDerived().VisitVKBindingAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseVKBufferPointerAttr(VKBufferPointerAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitVKBufferPointerAttr(A))
     return false;
   return true;
 }
@@ -3946,6 +4089,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLGloballyCoherentAttr(cast<HLSLGloballyCoherentAttr>(A));
     case attr::HLSLGroupShared:
       return getDerived().TraverseHLSLGroupSharedAttr(cast<HLSLGroupSharedAttr>(A));
+    case attr::HLSLHitObject:
+      return getDerived().TraverseHLSLHitObjectAttr(cast<HLSLHitObjectAttr>(A));
     case attr::HLSLIn:
       return getDerived().TraverseHLSLInAttr(cast<HLSLInAttr>(A));
     case attr::HLSLInOut:
@@ -3964,6 +4109,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLLinearAttr(cast<HLSLLinearAttr>(A));
     case attr::HLSLLoop:
       return getDerived().TraverseHLSLLoopAttr(cast<HLSLLoopAttr>(A));
+    case attr::HLSLMatrix:
+      return getDerived().TraverseHLSLMatrixAttr(cast<HLSLMatrixAttr>(A));
     case attr::HLSLMaxRecords:
       return getDerived().TraverseHLSLMaxRecordsAttr(cast<HLSLMaxRecordsAttr>(A));
     case attr::HLSLMaxRecordsSharedWith:
@@ -4022,6 +4169,12 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLPrimitivesAttr(cast<HLSLPrimitivesAttr>(A));
     case attr::HLSLRayPayload:
       return getDerived().TraverseHLSLRayPayloadAttr(cast<HLSLRayPayloadAttr>(A));
+    case attr::HLSLRayQueryObject:
+      return getDerived().TraverseHLSLRayQueryObjectAttr(cast<HLSLRayQueryObjectAttr>(A));
+    case attr::HLSLReorderCoherent:
+      return getDerived().TraverseHLSLReorderCoherentAttr(cast<HLSLReorderCoherentAttr>(A));
+    case attr::HLSLResource:
+      return getDerived().TraverseHLSLResourceAttr(cast<HLSLResourceAttr>(A));
     case attr::HLSLRootSignature:
       return getDerived().TraverseHLSLRootSignatureAttr(cast<HLSLRootSignatureAttr>(A));
     case attr::HLSLSample:
@@ -4034,6 +4187,12 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLSharedAttr(cast<HLSLSharedAttr>(A));
     case attr::HLSLSnorm:
       return getDerived().TraverseHLSLSnormAttr(cast<HLSLSnormAttr>(A));
+    case attr::HLSLStreamOutput:
+      return getDerived().TraverseHLSLStreamOutputAttr(cast<HLSLStreamOutputAttr>(A));
+    case attr::HLSLSubObject:
+      return getDerived().TraverseHLSLSubObjectAttr(cast<HLSLSubObjectAttr>(A));
+    case attr::HLSLTessPatch:
+      return getDerived().TraverseHLSLTessPatchAttr(cast<HLSLTessPatchAttr>(A));
     case attr::HLSLTriangle:
       return getDerived().TraverseHLSLTriangleAttr(cast<HLSLTriangleAttr>(A));
     case attr::HLSLTriangleAdj:
@@ -4046,6 +4205,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLUnormAttr(cast<HLSLUnormAttr>(A));
     case attr::HLSLUnroll:
       return getDerived().TraverseHLSLUnrollAttr(cast<HLSLUnrollAttr>(A));
+    case attr::HLSLVector:
+      return getDerived().TraverseHLSLVectorAttr(cast<HLSLVectorAttr>(A));
     case attr::HLSLVertices:
       return getDerived().TraverseHLSLVerticesAttr(cast<HLSLVerticesAttr>(A));
     case attr::HLSLWaveOpsIncludeHelperLanes:
@@ -4248,8 +4409,12 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseUsedAttr(cast<UsedAttr>(A));
     case attr::Uuid:
       return getDerived().TraverseUuidAttr(cast<UuidAttr>(A));
+    case attr::VKAliasedPointer:
+      return getDerived().TraverseVKAliasedPointerAttr(cast<VKAliasedPointerAttr>(A));
     case attr::VKBinding:
       return getDerived().TraverseVKBindingAttr(cast<VKBindingAttr>(A));
+    case attr::VKBufferPointer:
+      return getDerived().TraverseVKBufferPointerAttr(cast<VKBufferPointerAttr>(A));
     case attr::VKBuiltIn:
       return getDerived().TraverseVKBuiltInAttr(cast<VKBuiltInAttr>(A));
     case attr::VKCapabilityExt:

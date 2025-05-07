@@ -7,6 +7,7 @@ initializeDxilAnnotateWithVirtualRegisterPass(Registry);
 initializeDxilDbgValueToDbgDeclarePass(Registry);
 initializeDxilDebugInstrumentationPass(Registry);
 initializeDxilForceEarlyZPass(Registry);
+initializeDxilNonUniformResourceIndexInstrumentationPass(Registry);
 initializeDxilOutputColorBecomesConstantPass(Registry);
 initializeDxilPIXAddTidToAmplificationShaderPayloadPass(Registry);
 initializeDxilPIXDXRInvocationsLogPass(Registry);
