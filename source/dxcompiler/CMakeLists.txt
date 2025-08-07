@@ -131,5 +131,5 @@ install(
 
 install(
     FILES ${DXCOMPILER_HEADERS}
-    DESTINATION include
+    DESTINATION include/dxc
 )
